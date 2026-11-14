@@ -103,16 +103,17 @@ main{max-width:680px;margin:0 auto;padding-block:16px calc(100px + env(safe-area
 .rows{display:flex;flex-direction:column;gap:10px}
 .row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);text-align:right;width:100%}
 .row:active{background:var(--chip)}
-.avatar{width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:22px;background:var(--blue-soft);color:var(--blue)}
+.avatar{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:19px;background:var(--blue-soft);color:var(--blue)}
 .who{flex:1;min-width:0}
-.who .nm{font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.who .ph{display:flex;align-items:center;gap:6px;color:var(--ink);font-size:15px;opacity:.85;white-space:nowrap}
+.who .nm{font-weight:700;font-size:15px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.who .dt{font-size:12px;color:var(--muted);font-weight:600}
+.who .ph{display:flex;align-items:center;gap:6px;color:var(--ink);font-size:13px;opacity:.85;white-space:nowrap}
 .who .ph .ic{width:16px;height:16px;color:var(--muted)}
 .status{flex:none;min-width:110px;border-radius:12px;padding:6px 10px;display:flex;align-items:center;gap:8px;justify-content:center}
 .status .ic{width:22px;height:22px}
 .status .t{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
 .status .t small{font-size:12px;font-weight:700}
-.status .t b{font-size:16px;font-weight:800}
+.status .t b{font-size:15px;font-weight:800;white-space:nowrap}
 .status.owe{background:var(--red-bg);color:var(--red)}
 .status.ok{background:var(--green-bg);color:var(--green);font-weight:800;font-size:17px}
 .status.ok .ck{width:24px;height:24px;border-radius:50%;background:var(--green);color:var(--surface);display:grid;place-items:center}
@@ -129,7 +130,7 @@ main{max-width:680px;margin:0 auto;padding-block:16px calc(100px + env(safe-area
 .wa-item a.sent{background:var(--green-bg);color:var(--green)}
 .wa-item .nophone{color:var(--muted);font-size:12px;padding:8px 4px}
 textarea.tpl{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:15px;width:100%;min-height:110px;resize:vertical;font:inherit}
-@media (max-width:440px){.row{gap:8px;padding:10px}.chev{display:none}.status{min-width:0;padding:6px 8px}.status .t b{font-size:14px}.avatar{width:44px;height:44px;font-size:19px}.who .nm{font-size:16px}.who .ph{font-size:13px}.status>.ic{display:none}}
+@media (max-width:440px){.row{gap:8px;padding:10px}.chev{display:none}.status{min-width:0;padding:6px 8px}.status .t b{font-size:14px}.avatar{width:38px;height:38px;font-size:16px}.who .nm{font-size:14px}.who .ph{font-size:12px}.status>.ic{display:none}}
 
 .banner{border-radius:12px;padding:10px 14px;background:var(--chip);color:var(--muted);font-size:14px;font-weight:600}
 .banner.warn{background:var(--red-bg);color:var(--red)}
@@ -149,7 +150,7 @@ textarea.tpl{background:var(--bg);border:1.5px solid var(--line);border-radius:1
 
 /* customer page */
 .cust-top{padding:16px;display:flex;align-items:center;gap:12px}
-.cust-top h2{margin:0;font-size:22px;font-weight:800;overflow-wrap:anywhere}
+.cust-top h2{margin:0;font-size:19px;font-weight:800;overflow-wrap:anywhere}
 .cust-top .ph{color:var(--muted);font-size:14px}
 .bal-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .bal{padding:14px;min-width:0}
@@ -268,6 +269,8 @@ const dateFmt = new Intl.DateTimeFormat("ar-IQ-u-nu-latn", {year:"numeric",month
 const longDate = new Intl.DateTimeFormat("ar-IQ-u-nu-latn", {weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
+const initial = n => { const m = String(n||"").match(/[\u0600-\u06FF]/) || String(n||"").match(/\p{L}/u); return m ? m[0] : "؟"; };
+const shortD = new Intl.DateTimeFormat("ar-IQ-u-nu-latn", {day:"numeric", month:"short", year:"numeric"});
 const fmtPhone = p => { const d = toLatin(p).replace(/\D/g,""); return d.length === 11 && d[0] === "0" ? d.slice(0,4)+" "+d.slice(4,7)+" "+d.slice(7) : p; };
 
 const svg = (p, cls="") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
@@ -307,13 +310,13 @@ const DAY = 864e5;
 
 function balances(){
   const b = new Map();
-  for (const c of S.customers.values()) b.set(c.id, {IQD:0, USD:0, last:c.createdAt||0, lastPay:0, n:0});
+  for (const c of S.customers.values()) b.set(c.id, {IQD:0, USD:0, last:c.createdAt||0, lastPay:0, lastDebt:0, n:0});
   for (const t of S.txns){
     const x = b.get(t.customerId); if (!x) continue;
     const sign = t.type === "debt" ? 1 : -1;
     x[t.currency === "USD" ? "USD" : "IQD"] += sign * (Number(t.amount)||0);
     x.last = Math.max(x.last, t.at||0); x.n++;
-    if (t.type === "pay") x.lastPay = Math.max(x.lastPay, t.at||0);
+    if (t.type === "pay") x.lastPay = Math.max(x.lastPay, t.at||0); else x.lastDebt = Math.max(x.lastDebt, t.at||0);
   }
   return b;
 }
@@ -421,8 +424,8 @@ function customerRow(c, x){
   }
   const wa = OWE(x) && c.phone && W() ? `<button class="wa-mini" data-wa="${esc(c.id)}" aria-label="تذكير ${esc(c.name)} بالواتساب">${I.wa}</button>` : "";
   return `<div class="row" role="button" tabindex="0" data-c="${esc(c.id)}">
-    <span class="avatar">${esc((c.name||"؟").trim().charAt(0))}</span>
-    <span class="who"><div class="nm">${esc(c.name)}</div>${c.phone?`<div class="ph">${I.phone}<span class="num">${esc(fmtPhone(c.phone))}</span></div>`:`<div class="ph" style="color:var(--muted)">بدون رقم</div>`}</span>
+    <span class="avatar">${esc(initial(c.name))}</span>
+    <span class="who"><div class="nm">${esc(c.name)}</div><div class="dt">${x.lastDebt ? "آخر دين: " + shortD.format(x.lastDebt) : c.createdAt ? "أُضيف: " + shortD.format(c.createdAt) : ""}</div>${c.phone?`<div class="ph">${I.phone}<span class="num">${esc(fmtPhone(c.phone))}</span></div>`:`<div class="ph" style="color:var(--muted)">بدون رقم</div>`}</span>
     ${st}${wa}<span class="chev">${I.chevL}</span></div>`;
 }
 
@@ -588,8 +591,8 @@ function viewCustomer(c, x){
       <div class="val num ${owes?"red":"green"}">${fmt(Math.abs(v),cur)}</div>
       <div class="st ${owes?"red":"green"}">${owes?"عليه":credit?"له (دفع زيادة)":"مسدد"}</div></div>`;
   };
-  let html = statusBanner() + `<section class="card cust-top"><span class="avatar">${esc((c.name||"؟").trim().charAt(0))}</span>
-      <div style="min-width:0"><h2>${esc(c.name)}</h2><div class="ph">${c.phone?`<span class="num">${esc(fmtPhone(c.phone))}</span>`:"بدون رقم موبايل"}${c.note?" · "+esc(c.note):""}</div></div></section>
+  let html = statusBanner() + `<section class="card cust-top"><span class="avatar">${esc(initial(c.name))}</span>
+      <div style="min-width:0"><h2>${esc(c.name)}</h2><div class="ph">${c.phone?`<span class="num">${esc(fmtPhone(c.phone))}</span>`:"بدون رقم موبايل"}${c.note?" · "+esc(c.note):""}</div>${c.createdAt?`<div class="ph">أُضيف بتاريخ ${shortD.format(c.createdAt)}</div>`:""}</div></section>
     <div class="bal-pair">${box("IQD",x.IQD)}${box("USD",x.USD)}</div>
     ${W()?`<div class="big-actions"><button class="big add" id="addDebt">${I.plus}إضافة دين</button><button class="big recv" id="addPay">${I.coinCheck}استلام مبلغ</button></div>
       <button class="btn wa" id="waBtn">${I.wa}تذكير بالواتساب</button>`:""}
@@ -631,6 +634,12 @@ function busy(btn, fn, errEl){
     catch(e){ errEl.textContent = e && (e.code === "invalid_argument" || e.code === "permission-denied") ? "ما عندك صلاحية تعديل هذا الدفتر." : e && e.code === "quota_exceeded" ? "الدفتر امتلأ، احذف حركات قديمة." : (e && e.userMsg) || "صار خطأ بالحفظ، حاول مرة ثانية."; btn.disabled = false; }
   };
 }
+const todayISO = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); };
+function pickedTime(v){
+  if (!v || v === todayISO()) return Date.now();
+  const [y,m,d] = v.split("-").map(Number); const t = new Date(y, m-1, d, 12, 0, 0).getTime();
+  return isFinite(t) && t <= Date.now() ? t : Date.now();
+}
 function parseAmount(v){ const n = parseFloat(toLatin(v).replace(/[,\s]/g,"")); return isFinite(n) && n > 0 ? n : null; }
 
 function pickCustomer(type){
@@ -659,6 +668,7 @@ function txnSheet(c, type){
   sheet(`<h3>${type==="debt"?"دين جديد على":"استلام مبلغ من"} ${esc(c.name)}</h3>
     <div class="seg" role="group" aria-label="العملة"><button data-cur="IQD">دينار عراقي</button><button data-cur="USD">دولار</button></div>
     <div class="field"><label for="amt">المبلغ</label><input id="amt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+    <div class="field"><label for="tdate">${type==="debt"?"تاريخ الدين":"تاريخ الاستلام"}</label><input id="tdate" type="date" value="${todayISO()}" max="${todayISO()}"></div>
     <div class="field"><label for="note">ملاحظة (اختياري)</label><input id="note" placeholder="${type==="debt"?"مثلاً: كارتون زيت + سكر":"مثلاً: دفع نقداً"}"></div>
     <div class="err" id="err"></div>
     <div class="sheet-actions"><button class="btn ${type==="debt"?"primary":"good"}" id="save">حفظ</button><button class="btn ghost" data-close>إلغاء</button></div>`,
@@ -674,7 +684,7 @@ function txnSheet(c, type){
       const a = parseAmount(amt.value); if (!a) throw {userMsg:"اكتب مبلغ صحيح أكبر من صفر."};
       if (!LIC.canOp()){ close(); LIC.showBlocked(); return; }
       await S.db.collection("txns").doc(genId()).set({customerId:c.id, type, amount: cur==="USD" ? Math.round(a*100)/100 : Math.round(a), currency:cur,
-        note: el.querySelector("#note").value.trim().slice(0,300), at: Date.now(), by: S.me || "", byId: S.userId || null});
+        note: el.querySelector("#note").value.trim().slice(0,300), at: pickedTime(el.querySelector("#tdate").value), addedAt: Date.now(), by: S.me || "", byId: S.userId || null});
         LIC.countOp(); close(); toast(type==="debt" ? "تسجّل الدين" : "تسجّل المبلغ المستلم");
     }, el.querySelector("#err"));
   });
@@ -732,7 +742,7 @@ function waAllSheet(b){
   const list = [...S.customers.values()].map(c => ({c, x:b.get(c.id)})).filter(o => OWE(o.x)).sort((a,c2) => (c2.x.IQD + c2.x.USD*1500) - (a.x.IQD + a.x.USD*1500));
   sheet(`<h3>تذكير المديونين بالواتساب</h3>
     <div style="font-size:14px;color:var(--muted)">اضغط «إرسال» على كل زبون، ينفتح الواتساب والرسالة جاهزة، بس اضغط إرسال بالواتساب وارجع للدفتر. الواتساب ما يسمح بالإرسال الجماعي التلقائي.</div>
-    <div class="pick">${list.map(({c,x}) => `<div class="wa-item"><span class="avatar" style="width:40px;height:40px;font-size:17px">${esc(c.name.trim().charAt(0))}</span>
+    <div class="pick">${list.map(({c,x}) => `<div class="wa-item"><span class="avatar" style="width:40px;height:40px;font-size:17px">${esc(initial(c.name))}</span>
       <div class="who"><div class="nm" style="font-weight:800">${esc(c.name)}</div><div class="amt num">${[x.IQD>0.5?fmtIQD(x.IQD)+" د.ع":"", x.USD>0.005?"$"+fmtUSD(x.USD):""].filter(Boolean).join(" · ")}</div></div>
       ${c.phone ? `<a href="${esc(waHref(c,x))}" target="_blank" rel="noopener" data-sent="${esc(c.id)}" class="${sentNow.has(c.id)?"sent":""}">${I.wa}${sentNow.has(c.id)?"انرسل":"إرسال"}</a>` : `<span class="nophone">بدون رقم</span>`}</div>`).join("")}</div>
     <button class="btn ghost" data-close>إغلاق</button>`,

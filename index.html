@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>دفتر ديون بايت</title>
+<meta name="theme-color" content="#0b2e7a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="دفتر ديون">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: Byte brand header (navy→blue, curved) · welcome + date · 3-column summary · two action buttons · customers card · fixed bottom tab bar */
+:root{
+  --bg:#eef3fb; --surface:#ffffff; --ink:#0f1d3a; --muted:#6b7896; --line:#dbe3f0; --chip:#e9eef6;
+  --navy:#0b2e7a; --blue:#1257d6; --blue-soft:#dbe8fd; --red:#cf1f2d; --red-bg:#fde8ea; --green:#1c8a3a; --green-bg:#e2f5e7;
+  --h1:#0a2a72; --h2:#0e3d9c; --h3:#1557d0; --btn1:#1f6cf0; --btn2:#0f4fc9; --on-strong:#ffffff; --shadow:0 4px 18px rgba(18,60,140,.08);
+  --f:"Cairo",system-ui,"Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a1120; --surface:#131c30; --ink:#e6ecf8; --muted:#93a0bd; --line:#24304a; --chip:#1c2740;
+  --blue:#4d8dff; --blue-soft:#1b2b4d; --red:#ff6f76; --red-bg:#3a1a22; --green:#4fd27a; --green-bg:#133022; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1120; --surface:#131c30; --ink:#e6ecf8; --muted:#93a0bd; --line:#24304a; --chip:#1c2740;
+  --blue:#4d8dff; --blue-soft:#1b2b4d; --red:#ff6f76; --red-bg:#3a1a22; --green:#4fd27a; --green-bg:#133022; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.5;direction:rtl}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.fill{fill:currentColor;stroke:none}
+
+/* header */
+.hdr{position:relative;overflow:hidden;color:#fff;background:linear-gradient(115deg,var(--h1) 0%,var(--h2) 55%,var(--h3) 100%);
+  border-radius:0 0 28px 28px;padding-block:16px 22px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hdr::after{content:"";position:absolute;inset:auto -10% -60% 30%;height:120%;border-radius:50%;border-top:3px solid rgba(120,180,255,.35);pointer-events:none}
+.hdr-in{position:relative;max-width:680px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.app-name{display:flex;align-items:center;gap:8px;font-weight:800;font-size:22px;white-space:nowrap}
+.app-name .badge{width:40px;height:40px;border:2px solid #fff;border-radius:10px;display:grid;place-items:center}
+.logo{flex:1;display:flex;flex-direction:column;align-items:center;line-height:1;min-width:0}
+.logo b{font-size:30px;font-weight:800;font-style:italic;letter-spacing:.02em;position:relative;font-family:"Cairo",Arial,sans-serif}
+.logo b::after{content:"";position:absolute;top:-4px;left:-12px;width:7px;height:7px;background:#39a0ff;box-shadow:6px -6px 0 #39a0ff}
+.logo small{font-size:12px;font-weight:600;margin-top:4px;opacity:.95}
+.hdr-btns{display:flex;gap:8px}
+.hb{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.1);color:#fff;display:grid;place-items:center}
+.hb .dot{position:absolute;top:6px;right:7px;width:10px;height:10px;border-radius:50%;background:#ff3b3b;border:2px solid var(--h2)}
+.back-btn{display:flex;align-items:center;gap:4px;background:transparent;border:0;color:#fff;font-weight:700;font-size:18px;padding:0}
+@media (max-width:440px){.logo b{font-size:22px}.logo small{font-size:10px}.app-name{font-size:17px;gap:6px}.app-name .badge{width:32px;height:32px}.app-name .badge .ic{width:18px;height:18px}.hb{width:36px;height:36px}.hb .ic{width:19px;height:19px}.hdr-btns{gap:6px}}
+@media (max-width:350px){.logo{display:none}.hdr-in{justify-content:space-between}}
+
+main{max-width:680px;margin:0 auto;padding-block:16px calc(100px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+
+.welcome{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hello{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;min-width:0}
+.hello .av{width:46px;height:46px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center}
+.date-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--ink);box-shadow:var(--shadow)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);padding:16px 6px}
+.sum{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:0 6px;min-width:0}
+.sum + .sum{border-right:1px solid var(--line)}
+.sum .ic{width:34px;height:34px}
+.sum .lbl{font-weight:700;font-size:14px}
+.sum .val{font-weight:800;font-size:19px;white-space:nowrap;line-height:1.3}
+.sum .usd{font-size:12px;font-weight:700;color:var(--muted)}
+.sum.r{color:var(--red)} .sum.g{color:var(--green)} .sum.n .lbl,.sum.n .ic{color:var(--ink)}
+.sum.n .val{background:var(--navy);color:#fff;border-radius:10px;padding:4px 10px}
+@media (max-width:440px){.sum .val{font-size:14px}.sum.n .val{padding:4px 6px}.sum .lbl{font-size:12px}.sum .ic{width:28px;height:28px}}
+
+.big-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big{display:flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:16px;padding:16px 10px;font-weight:800;font-size:18px;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.big .ic{width:28px;height:28px}
+.big.add{background:linear-gradient(180deg,var(--btn1),var(--btn2))}
+.big.recv{background:linear-gradient(180deg,#2aa04a,#1a7f37)}
+.big:disabled{opacity:.5}
+
+.cust-card{padding:16px;display:flex;flex-direction:column;gap:12px}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-head h2{display:flex;align-items:center;gap:8px;margin:0;font-size:20px;font-weight:800}
+.card-head h2 .ic{color:var(--navy)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .card-head h2 .ic{color:var(--blue)}}
+:root[data-theme="dark"] .card-head h2 .ic{color:var(--blue)}
+.see-all{background:transparent;border:0;color:var(--blue);font-weight:700;display:flex;align-items:center;gap:2px;padding:0}
+.see-all .ic{width:18px;height:18px}
+.search{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:14px;padding:0 14px;background:var(--surface)}
+.search input{flex:1;min-width:0;border:0;background:transparent;padding:12px 0;font-size:16px;outline:none}
+.search .ic{color:var(--ink)}
+.filters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.filters button{border:0;background:var(--chip);border-radius:999px;padding:8px 6px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px}
+.filters button[aria-pressed="true"]{background:var(--blue);color:#fff}
+.filters .ok{width:20px;height:20px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center}
+.filters .ok .ic{width:13px;height:13px;stroke-width:3}
+
+.rows{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface);text-align:right;width:100%}
+.row:active{background:var(--chip)}
+.avatar{width:52px;height:52px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:22px;background:var(--blue-soft);color:var(--blue)}
+.who{flex:1;min-width:0}
+.who .nm{font-weight:800;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who .ph{display:flex;align-items:center;gap:6px;color:var(--ink);font-size:15px;opacity:.85;white-space:nowrap}
+.who .ph .ic{width:16px;height:16px;color:var(--muted)}
+.status{flex:none;min-width:110px;border-radius:12px;padding:6px 10px;display:flex;align-items:center;gap:8px;justify-content:center}
+.status .ic{width:22px;height:22px}
+.status .t{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.status .t small{font-size:12px;font-weight:700}
+.status .t b{font-size:16px;font-weight:800}
+.status.owe{background:var(--red-bg);color:var(--red)}
+.status.ok{background:var(--green-bg);color:var(--green);font-weight:800;font-size:17px}
+.status.ok .ck{width:24px;height:24px;border-radius:50%;background:var(--green);color:var(--surface);display:grid;place-items:center}
+.status.ok .ck .ic{width:15px;height:15px;stroke-width:3}
+.chev{color:var(--muted)}
+.wa-mini{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--green-bg);color:var(--green);display:grid;place-items:center}
+.wa-mini .ic{width:21px;height:21px}
+.wa-all{display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid var(--green);color:var(--green);background:var(--surface);border-radius:16px;padding:13px;font-weight:800;font-size:16px}
+.wa-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px}
+.wa-item .who{flex:1;min-width:0}
+.wa-item .amt{font-size:13px;font-weight:700;color:var(--red)}
+.wa-item a,.wa-item .nophone{flex:none;border-radius:12px;padding:8px 14px;font-weight:800;font-size:14px;text-decoration:none;display:flex;align-items:center;gap:6px}
+.wa-item a{background:var(--green);color:#fff}
+.wa-item a.sent{background:var(--green-bg);color:var(--green)}
+.wa-item .nophone{color:var(--muted);font-size:12px;padding:8px 4px}
+textarea.tpl{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:15px;width:100%;min-height:110px;resize:vertical;font:inherit}
+@media (max-width:440px){.row{gap:8px;padding:10px}.chev{display:none}.status{min-width:0;padding:6px 8px}.status .t b{font-size:14px}.avatar{width:44px;height:44px;font-size:19px}.who .nm{font-size:16px}.who .ph{font-size:13px}.status>.ic{display:none}}
+
+.banner{border-radius:12px;padding:10px 14px;background:var(--chip);color:var(--muted);font-size:14px;font-weight:600}
+.banner.warn{background:var(--red-bg);color:var(--red)}
+.empty{text-align:center;padding:28px 16px;color:var(--muted);border:1.5px dashed var(--line);border-radius:14px}
+.empty h3{color:var(--ink);margin:0 0 4px;font-size:17px}
+
+/* bottom nav */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 18px rgba(18,60,140,.08);
+  padding-block:8px calc(8px + env(safe-area-inset-bottom,0px));padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.tabs-in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.tab{border:0;background:transparent;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-weight:700;font-size:13px;color:var(--ink)}
+.tab .ic{width:26px;height:26px;color:var(--navy)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tab .ic{color:var(--muted)}}
+:root[data-theme="dark"] .tab .ic{color:var(--muted)}
+.tab[aria-current="page"]{background:linear-gradient(180deg,var(--btn1),var(--btn2));color:#fff}
+.tab[aria-current="page"] .ic{color:#fff}
+
+/* customer page */
+.cust-top{padding:16px;display:flex;align-items:center;gap:12px}
+.cust-top h2{margin:0;font-size:22px;font-weight:800;overflow-wrap:anywhere}
+.cust-top .ph{color:var(--muted);font-size:14px}
+.bal-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bal{padding:14px;min-width:0}
+.bal .lbl{font-size:13px;color:var(--muted);font-weight:700}
+.bal .val{font-size:22px;font-weight:800;overflow-wrap:anywhere}
+.bal .st{font-size:13px;font-weight:700}
+.red{color:var(--red)} .green{color:var(--green)}
+.btn{border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.wa{color:var(--green);border-color:var(--green)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.danger{background:var(--red);border-color:var(--red);color:#fff}
+.btn.good{background:var(--green);border-color:var(--green);color:#fff}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.5}
+.sec{margin:4px 0 0;font-size:17px;font-weight:800}
+.txl{padding:4px 14px}
+.txn{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.txn:last-child{border-bottom:0}
+.txn .tic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none}
+.txn.d .tic{background:var(--red-bg);color:var(--red)} .txn.p .tic{background:var(--green-bg);color:var(--green)}
+.txn .tic .ic{width:20px;height:20px}
+.txn .body{flex:1;min-width:0}
+.txn .t1{display:flex;justify-content:space-between;gap:8px;font-weight:800}
+.txn .note{font-size:14px;overflow-wrap:anywhere}
+.txn .meta{font-size:12px;color:var(--muted)}
+.txn .cn{background:transparent;border:0;padding:0;color:var(--blue);font-weight:700}
+.txn .del{background:transparent;border:0;color:var(--muted);font-size:12px;padding:2px 0;text-decoration:underline}
+.link-row{display:flex;gap:16px;flex-wrap:wrap}
+.link{background:transparent;border:0;color:var(--blue);padding:0;font-size:14px;font-weight:700;text-decoration:underline}
+.link.danger{color:var(--red)}
+
+/* reports */
+.rep{padding:16px;display:flex;flex-direction:column;gap:10px}
+.rep h3{margin:0;font-size:17px;font-weight:800}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted);font-weight:600}
+.kv b{font-weight:800}
+.bar{height:8px;border-radius:4px;background:var(--chip);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--red);border-radius:4px}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(5,15,40,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:680px;border-radius:22px 22px 0 0;max-height:92vh;overflow:auto;
+  padding-block:18px calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h3{margin:0;font-size:20px;font-weight:800}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:13px;color:var(--muted);font-weight:700}
+.field input{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;width:100%}
+.amount{font-size:26px!important;font-weight:800;direction:ltr;text-align:left}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--chip);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:8px;font-weight:800;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.sheet-actions{display:flex;gap:10px}
+.sheet-actions .btn{flex:1}
+.err{color:var(--red);font-size:13px;font-weight:600;min-height:1em}
+.msg-preview{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;white-space:pre-wrap;font-size:14px;user-select:all}
+.pick{display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow:auto}
+a.btn{text-decoration:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:999px;z-index:30;font-size:14px;font-weight:700}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sw{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.sw i{width:34px;height:34px;border-radius:50%;display:block;box-shadow:inset 0 0 0 3px rgba(255,255,255,.35)}
+.sw[aria-pressed="true"]{border-color:var(--ink)}
+.sw input{width:34px;height:34px;border:0;padding:0;background:transparent;border-radius:50%;cursor:pointer}
+.seg3{grid-template-columns:repeat(3,1fr)}
+.set-sec{display:flex;flex-direction:column;gap:8px}
+.set-sec h4{margin:0;font-size:15px;font-weight:800}
+.set-sec .hint{font-size:12px;color:var(--muted)}
+/* gate (install / activation / shop) */
+.gate{position:fixed;inset:0;z-index:40;overflow:auto;background:linear-gradient(160deg,var(--h1),var(--h2) 55%,var(--h3));color:#fff;
+  padding-block:calc(28px + env(safe-area-inset-top,0px)) calc(28px + env(safe-area-inset-bottom,0px));padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+.gate-in{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.gate .logo b{font-size:40px}.gate .logo small{font-size:14px}
+.gate h2{margin:0;font-size:22px;font-weight:800;text-align:center}
+.gate p{margin:0;text-align:center;opacity:.92}
+.gcard{background:var(--surface);color:var(--ink);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.gcard h3{margin:0;font-size:18px;font-weight:800}
+.devcode{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--chip);border-radius:12px;padding:12px 14px}
+.devcode b{font-size:19px;letter-spacing:.06em;direction:ltr;font-family:ui-monospace,Consolas,monospace}
+textarea.serial{background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:13px;min-height:96px;width:100%;direction:ltr;word-break:break-all;resize:vertical;color:var(--ink)}
+.steps{margin:0;padding:0 18px 0 0;display:flex;flex-direction:column;gap:8px}
+.steps li b{color:var(--blue)}
+.gate .skip{background:transparent;border:0;color:#fff;opacity:.85;text-decoration:underline;font-weight:700;align-self:center}
+.gate .foot{text-align:center;font-size:12px;opacity:.8}
+.tabs2{display:grid;grid-template-columns:1fr 1fr;background:var(--chip);border-radius:12px;padding:4px;gap:4px}
+.tabs2 button{border:0;background:transparent;border-radius:9px;padding:9px;font-weight:800;color:var(--muted)}
+.tabs2 button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.trial-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff4dc;color:#8a5a00;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14px}
+.trial-bar button{border:0;background:#8a5a00;color:#fff;border-radius:10px;padding:6px 12px;font-weight:800}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
+</style>
+<style id="themeStyle"></style>
+</head><body>
+
+<header class="hdr"><div class="hdr-in" id="hdr"></div></header>
+<main id="app"><div class="banner">جاري تحميل الدفتر…</div></main>
+<nav class="tabs" aria-label="التنقل"><div class="tabs-in" id="tabs"></div></nav>
+<div id="sheetRoot"></div>
+<div id="gate" class="gate" hidden></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+
+<script>
+(function(){
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const toLatin = s => String(s ?? "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/٫/g,".").replace(/٬/g,",");
+const genId = () => Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+const fmtIQD = n => Math.round(n).toLocaleString("en-US");
+const fmtUSD = n => (Math.round(n*100)/100).toLocaleString("en-US",{maximumFractionDigits:2});
+const fmt = (n, cur) => cur === "USD" ? "$" + fmtUSD(n) : fmtIQD(n) + " د.ع";
+const dateFmt = new Intl.DateTimeFormat("ar-IQ-u-nu-latn", {year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+const longDate = new Intl.DateTimeFormat("ar-IQ-u-nu-latn", {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
+const fmtPhone = p => { const d = toLatin(p).replace(/\D/g,""); return d.length === 11 && d[0] === "0" ? d.slice(0,4)+" "+d.slice(4,7)+" "+d.slice(7) : p; };
+
+const svg = (p, cls="") => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+const I = {
+  gear: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
+  bell: svg('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'),
+  book: svg('<rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M9 7h6M9 11h6M9 15h3"/><path d="M3 6h2M3 10h2M3 14h2M3 18h2"/>'),
+  user: svg('<circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c0-4.4 3.8-6.5 8.5-6.5s8.5 2.1 8.5 6.5z"/>', "fill"),
+  cal: svg('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M7 14h4M7 18h7"/>'),
+  coins: svg('<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v4c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 10v4c0 1.7 3.6 3 8 3s8-1.3 8-3v-4M4 14v4c0 1.7 3.6 3 8 3s8-1.3 8-3v-4"/>'),
+  hand: svg('<circle cx="14" cy="6.5" r="4"/><path d="M14 4.8v3.4M2 14h3l4 3h5a1.8 1.8 0 0 0 0-3.6h-3"/><path d="M14 13.4l5.2-2.6a1.9 1.9 0 0 1 2 3.2L14 19.5H8"/>'),
+  scale: svg('<path d="M12 3v17M7 21h10M4 7h16M6 7l-3 7a3 3 0 0 0 6 0zM18 7l-3 7a3 3 0 0 0 6 0z"/>'),
+  plus: svg('<path d="M12 5v14M5 12h14"/>'),
+  coinCheck: svg('<ellipse cx="10" cy="6" rx="7" ry="3"/><path d="M3 6v4c0 1.7 3.1 3 7 3M3 10v4c0 1.7 3.1 3 7 3M17 6v3"/><circle cx="17.5" cy="16.5" r="4.5"/><path d="M15.5 16.5l1.5 1.5 2.5-3"/>'),
+  users: svg('<circle cx="9" cy="7.5" r="3.6"/><path d="M2 20c0-4 3.2-6 7-6s7 2 7 6z"/><circle cx="17.5" cy="8.5" r="2.8"/><path d="M17 13.6c3 .2 5 2 5 5.4h-4"/>', "fill"),
+  search: svg('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'),
+  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  phone: svg('<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>', "fill"),
+  home: svg('<path d="M3 11.2L12 3l9 8.2V21a1 1 0 0 1-1 1h-5.5v-6.5h-5V22H4a1 1 0 0 1-1-1z"/>', "fill"),
+  swap: svg('<path d="M7 3L3 7l4 4M3 7h15M17 13l4 4-4 4M21 17H6"/>'),
+  chart: svg('<rect x="4" y="12" width="4" height="9" rx="1"/><rect x="10" y="4" width="4" height="17" rx="1"/><rect x="16" y="9" width="4" height="12" rx="1"/>', "fill"),
+  dots: svg('<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>', "fill"),
+  chevL: svg('<path d="M15 6l-6 6 6 6"/>'),
+  back: svg('<path d="M9 6l6 6-6 6"/>'),
+  wa: svg('<path d="M21 12a9 9 0 0 1-13.4 7.9L3 21l1.2-4.4A9 9 0 1 1 21 12z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-2-2l.8-1-1-2z"/>'),
+  minus: svg('<path d="M5 12h14"/>')
+};
+
+const DEFAULT_COLOR = "#1257d6";
+const S = {
+  db:null, userId:null, canWrite:true, readOnlyReason:"",
+  customers:new Map(), txns:[], loadedC:false, loadedT:false, failed:"", stale:false,
+  me: lsGet("debtbook.me") || "", color: lsGet("debtbook.color") || DEFAULT_COLOR, mode: lsGet("debtbook.mode") || "auto", tpl: lsGet("debtbook.tpl") || "", modeTouched:false, filter:"all", q:"", txFilter:"all", txShow:150
+};
+const OWE = x => x.IQD > 0.5 || x.USD > 0.005;
+const DAY = 864e5;
+
+function balances(){
+  const b = new Map();
+  for (const c of S.customers.values()) b.set(c.id, {IQD:0, USD:0, last:c.createdAt||0, lastPay:0, n:0});
+  for (const t of S.txns){
+    const x = b.get(t.customerId); if (!x) continue;
+    const sign = t.type === "debt" ? 1 : -1;
+    x[t.currency === "USD" ? "USD" : "IQD"] += sign * (Number(t.amount)||0);
+    x.last = Math.max(x.last, t.at||0); x.n++;
+    if (t.type === "pay") x.lastPay = Math.max(x.lastPay, t.at||0);
+  }
+  return b;
+}
+function totals(since=0){
+  const t = {debt:{IQD:0,USD:0}, pay:{IQD:0,USD:0}};
+  for (const x of S.txns){ if (!S.customers.has(x.customerId) || (x.at||0) < since) continue;
+    t[x.type==="debt"?"debt":"pay"][x.currency==="USD"?"USD":"IQD"] += Number(x.amount)||0; }
+  return t;
+}
+function alerts(b){
+  const now = Date.now(); const out = [];
+  for (const c of S.customers.values()){ const x = b.get(c.id); if (!OWE(x)) continue;
+    const ref = x.lastPay || x.last; if (now - ref > 30*DAY) out.push({c, x, days: Math.floor((now-ref)/DAY)}); }
+  return out.sort((a,b2) => b2.days - a.days);
+}
+
+/* ---------- theme ---------- */
+const PRESETS = [["#1257d6","أزرق"],["#0f8a5f","أخضر"],["#0e8a9a","تركوازي"],["#6d3fd1","بنفسجي"],["#a3203f","خمري"],["#d9661a","برتقالي"],["#3d4a5c","رصاصي"]];
+function hexToHsl(hex){
+  let r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h=0,s=0;const l=(mx+mn)/2;
+  if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60;}
+  return [Math.round(h),Math.round(s*100)];
+}
+function themeCss(hex){
+  const [h,s0] = hexToHsl(hex); const s = Math.min(s0, 85);
+  const c = (l, sm=1) => `hsl(${h} ${Math.round(s*sm)}% ${l}%)`;
+  const light = `--navy:${c(26)};--h1:${c(22)};--h2:${c(32)};--h3:${c(44)};--btn1:${c(52)};--btn2:${c(40)};--blue:${c(44)};--blue-soft:${c(92,.8)};--bg:${c(96,.45)};--chip:${c(93,.35)};--line:${c(88,.3)}`;
+  const dark = `--blue:${c(66)};--blue-soft:${c(20,.5)};--bg:${c(7,.4)};--surface:${c(12,.35)};--chip:${c(17,.35)};--line:${c(22,.3)};color-scheme:dark`;
+  return `:root{${light}}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${dark}}}:root[data-theme="dark"]{${dark}}`;
+}
+function applyColor(hex){
+  const ok = /^#[0-9a-f]{6}$/i.test(hex||"") ? hex : DEFAULT_COLOR;
+  $("#themeStyle").textContent = ok.toLowerCase() === DEFAULT_COLOR ? "" : themeCss(ok);
+  const [h,s] = hexToHsl(ok); const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = `hsl(${h} ${Math.min(s,85)}% 26%)`;
+}
+function applyMode(m){
+  const el = document.documentElement;
+  if (m === "light" || m === "dark") el.setAttribute("data-theme", m);
+  else if (S.modeTouched) el.removeAttribute("data-theme");
+  if (m === "light" || m === "dark") S.modeTouched = true;
+}
+
+/* ---------- routing ---------- */
+const TABS = [["","الرئيسية",I.home],["customers","الزبائن",I.users],["txns","الحركات",I.swap],["reports","التقارير",I.chart],["more","المزيد",I.dots]];
+function route(){ const h = location.hash.slice(1); if (h.startsWith("c-")) return {view:"cust", id:h.slice(2)};
+  return {view: TABS.some(t => t[0]===h) ? h : ""}; }
+let pushed = false;
+function openCustomer(id){ pushed = true; location.hash = "c-" + id; }
+function goBack(){ if (pushed && history.length > 1){ pushed = false; history.back(); } else location.hash = ""; }
+window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
+
+/* ---------- chrome ---------- */
+function renderChrome(r, b){
+  const hasAlerts = S.loadedT && alerts(b).length > 0;
+  const left = `<div class="hdr-btns">
+      <button class="hb" id="gearBtn" aria-label="الإعدادات">${I.gear}</button>
+      <button class="hb" id="bellBtn" aria-label="التنبيهات">${I.bell}${hasAlerts?'<span class="dot"></span>':""}</button></div>`;
+  const right = r.view === "cust"
+    ? `<button class="back-btn" id="backBtn">${I.back} رجوع</button>`
+    : `<div class="app-name"><span class="badge">${I.book}</span>دفتر ديون</div>`;
+  $("#hdr").innerHTML = `${right}<div class="logo"><b>BYTE</b><small>للحلول البرمجية</small></div>${left}`;
+  $("#gearBtn").onclick = settingsSheet;
+  $("#bellBtn").onclick = () => alertsSheet(b);
+  if ($("#backBtn")) $("#backBtn").onclick = goBack;
+  const cur = r.view === "cust" ? "customers" : r.view;
+  $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="tab" data-tab="${k}" ${cur===k?'aria-current="page"':""}>${ic}<span>${l}</span></button>`).join("");
+  $("#tabs").querySelectorAll("[data-tab]").forEach(el => el.onclick = () => { pushed = false; location.hash = el.dataset.tab; });
+}
+
+function statusBanner(){
+  let h = "";
+  if (S.failed) h += `<div class="banner warn">${esc(S.failed)}</div>`;
+  else if (S.stale) h += `<div class="banner warn">ما كدرنا نوصل للبيانات بعد. تأكد من الإنترنت، الصفحة راح تتحدث وحدها.</div>`;
+  if (S.db && !S.canWrite) h += `<div class="banner">${esc(S.readOnlyReason)}</div>`;
+  return h;
+}
+const W = () => S.canWrite && !!S.db;
+
+/* ---------- views ---------- */
+function render(){
+  const r = route(); const b = balances();
+  renderChrome(r, b);
+  const app = $("#app");
+  if (!(S.loadedC && S.loadedT)){ app.innerHTML = statusBanner() || '<div class="banner">جاري تحميل الدفتر…</div>'; return; }
+  if (r.view === "cust"){
+    const c = S.customers.get(r.id);
+    if (c) return viewCustomer(c, b.get(c.id));
+    app.innerHTML = '<div class="banner warn">هذا الزبون غير موجود، ربما انحذف من موبايل ثاني.</div>'; return;
+  }
+  ({"":viewHome, customers:viewCustomers, txns:viewTxns, reports:viewReports, more:viewMore})[r.view](b);
+}
+
+function customerRow(c, x){
+  let st;
+  if (OWE(x)){
+    const lines = [];
+    if (x.IQD > 0.5) lines.push(`<b class="num">${fmtIQD(x.IQD)} د.ع</b>`);
+    if (x.USD > 0.005) lines.push(`<b class="num">$${fmtUSD(x.USD)}</b>`);
+    st = `<span class="status owe">${I.coins}<span class="t"><small>عليه</small>${lines.join("")}</span></span>`;
+  } else if (x.IQD < -0.5 || x.USD < -0.005){
+    st = `<span class="status ok"><span class="t"><small>له</small><b class="num">${x.IQD<-0.5?fmtIQD(-x.IQD)+" د.ع":"$"+fmtUSD(-x.USD)}</b></span></span>`;
+  } else {
+    st = `<span class="status ok"><span class="ck">${I.check}</span>مسدد</span>`;
+  }
+  const wa = OWE(x) && c.phone && W() ? `<button class="wa-mini" data-wa="${esc(c.id)}" aria-label="تذكير ${esc(c.name)} بالواتساب">${I.wa}</button>` : "";
+  return `<div class="row" role="button" tabindex="0" data-c="${esc(c.id)}">
+    <span class="avatar">${esc((c.name||"؟").trim().charAt(0))}</span>
+    <span class="who"><div class="nm">${esc(c.name)}</div>${c.phone?`<div class="ph">${I.phone}<span class="num">${esc(fmtPhone(c.phone))}</span></div>`:`<div class="ph" style="color:var(--muted)">بدون رقم</div>`}</span>
+    ${st}${wa}<span class="chev">${I.chevL}</span></div>`;
+}
+
+function customersBlock(b, limit){
+  const q = toLatin(S.q).trim().toLowerCase();
+  const list = [...S.customers.values()].map(c => ({c, x:b.get(c.id)}))
+    .filter(({c,x}) => {
+      if (q && !((c.name||"").toLowerCase().includes(q) || toLatin(c.phone||"").replace(/\D/g,"").includes(q.replace(/\D/g,"") || "\u0000"))) return false;
+      return S.filter==="all" || (S.filter==="owe" ? OWE(x) : !OWE(x));
+    }).sort((a,b2) => b2.x.last - a.x.last);
+  const shown = limit && !q ? list.slice(0, limit) : list;
+  let rows;
+  if (!S.customers.size) rows = `<div class="empty"><h3>الدفتر فارغ</h3>${W()?"اضغط «إضافة دين» فوق وأضف أول زبون. أي شي تسجله يظهر فوراً على كل الموبايلات.":"لم تتم إضافة زبائن بعد."}</div>`;
+  else if (!shown.length) rows = `<div class="empty">ماكو نتائج مطابقة.</div>`;
+  else rows = `<div class="rows">${shown.map(({c,x}) => customerRow(c,x)).join("")}</div>`;
+  return `<div class="search">${I.search}<input id="q" type="search" placeholder="ابحث عن زبون..." value="${esc(S.q)}" autocomplete="off"></div>
+    <div class="filters" role="group" aria-label="تصفية">
+      <button data-f="all" aria-pressed="${S.filter==="all"}">الكل</button>
+      <button data-f="owe" aria-pressed="${S.filter==="owe"}">عليه دين</button>
+      <button data-f="clear" aria-pressed="${S.filter==="clear"}"><span class="ok">${I.check}</span>مسدد</button>
+    </div>${rows}`;
+}
+function wireRows(root, onOpen){
+  root.querySelectorAll(".row[data-c]").forEach(el => {
+    el.onclick = e => { const w = e.target.closest("[data-wa]"); if (w){ e.stopPropagation(); const c = S.customers.get(w.dataset.wa); waSheet(c, balances().get(c.id)); return; } onOpen(el.dataset.c); };
+    el.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); onOpen(el.dataset.c); } };
+  });
+}
+function wireCustomers(){
+  const app = $("#app");
+  const qi = $("#q");
+  if (qi) qi.addEventListener("input", e => { S.q = e.target.value; const pos = e.target.selectionStart; render(); const n=$("#q"); if(n){ n.focus(); try{n.setSelectionRange(pos,pos);}catch(_){} } });
+  app.querySelectorAll("[data-f]").forEach(el => el.onclick = () => { S.filter = el.dataset.f; render(); });
+  wireRows(app, openCustomer);
+}
+
+function viewHome(b){
+  const t = totals();
+  const net = {IQD: t.debt.IQD - t.pay.IQD, USD: t.debt.USD - t.pay.USD};
+  const anyUSD = t.debt.USD || t.pay.USD;
+  const owingCount = [...b.values()].filter(OWE).length;
+  const usd = v => anyUSD ? `<span class="usd num">+ $${fmtUSD(v)}</span>` : "";
+  $("#app").innerHTML = statusBanner() + LIC.bar() + `
+    <div class="welcome">
+      <div class="hello"><span class="av">${I.user}</span><span>مرحباً بك${S.me?"، "+esc(S.me):""}</span></div>
+      <div class="date-chip">${I.cal}<span>${longDate.format(new Date())}</span></div>
+    </div>
+    <section class="card summary" aria-label="الملخص">
+      <div class="sum r">${I.coins}<div class="lbl">إجمالي الديون</div><div class="val num">${fmtIQD(t.debt.IQD)} د.ع</div>${usd(t.debt.USD)}</div>
+      <div class="sum g">${I.hand}<div class="lbl">المبالغ المستلمة</div><div class="val num">${fmtIQD(t.pay.IQD)} د.ع</div>${usd(t.pay.USD)}</div>
+      <div class="sum n">${I.scale}<div class="lbl">صافي المتبقي</div><div class="val num">${fmtIQD(net.IQD)} د.ع</div>${usd(net.USD)}</div>
+    </section>
+    <div class="big-actions">
+      <button class="big add" id="bigAdd" ${W()?"":"disabled"}>${I.plus}إضافة دين</button>
+      <button class="big recv" id="bigRecv" ${W()?"":"disabled"}>${I.coinCheck}استلام مبلغ</button>
+    </div>
+    ${W() && owingCount ? `<button class="wa-all" id="waAll">${I.wa}إرسال تذكير واتساب للمديونين (${owingCount})</button>` : ""}
+    <section class="card cust-card">
+      <div class="card-head"><h2>${I.users}الزبائن</h2><button class="see-all" id="seeAll">عرض الكل ${I.chevL}</button></div>
+      ${customersBlock(b, 6)}
+    </section>`;
+  if ($("#trialAct")) $("#trialAct").onclick = () => LIC.showGate(true);
+  $("#bigAdd").onclick = () => pickCustomer("debt");
+  $("#bigRecv").onclick = () => pickCustomer("pay");
+  $("#seeAll").onclick = () => { location.hash = "customers"; };
+  if ($("#waAll")) $("#waAll").onclick = () => waAllSheet(b);
+  wireCustomers();
+}
+
+function viewCustomers(b){
+  $("#app").innerHTML = statusBanner() + `<section class="card cust-card">
+      <div class="card-head"><h2>${I.users}كل الزبائن (${S.customers.size})</h2>${W()?`<button class="see-all" id="newC">${I.plus} زبون جديد</button>`:""}</div>
+      ${customersBlock(b, 0)}</section>`;
+  if ($("#newC")) $("#newC").onclick = () => customerSheet(null, id => openCustomer(id));
+  wireCustomers();
+}
+
+function txnItem(t, withName){
+  const c = S.customers.get(t.customerId);
+  return `<div class="txn ${t.type==="debt"?"d":"p"}"><span class="tic">${t.type==="debt"?I.plus:I.minus}</span>
+    <div class="body"><div class="t1"><span>${withName && c ? `<button class="cn" data-c="${esc(c.id)}">${esc(c.name)}</button>` : (t.type==="debt"?"دين":"تسديد")}</span>
+      <span class="num ${t.type==="debt"?"red":"green"}">${t.type==="debt"?"+":"−"}${fmt(Number(t.amount)||0,t.currency)}</span></div>
+    ${t.note?`<div class="note">${esc(t.note)}</div>`:""}
+    <div class="meta">${withName?(t.type==="debt"?"دين · ":"تسديد · "):""}${t.at?dateFmt.format(t.at):""}${t.by?" · سجّلها: "+esc(t.by):""}</div>
+    ${!withName && W()?`<button class="del" data-del="${esc(t.id)}">حذف الحركة</button>`:""}</div></div>`;
+}
+
+function viewTxns(){
+  const all = S.txns.filter(t => S.customers.has(t.customerId) && (S.txFilter==="all" || t.type===S.txFilter)).sort((a,b) => (b.at||0)-(a.at||0));
+  const shown = all.slice(0, S.txShow);
+  $("#app").innerHTML = statusBanner() + `<section class="card cust-card">
+    <div class="card-head"><h2>${I.swap}الحركات (${all.length})</h2></div>
+    <div class="filters" role="group" aria-label="نوع الحركة">
+      <button data-tf="all" aria-pressed="${S.txFilter==="all"}">الكل</button>
+      <button data-tf="debt" aria-pressed="${S.txFilter==="debt"}">ديون</button>
+      <button data-tf="pay" aria-pressed="${S.txFilter==="pay"}">تسديدات</button></div>
+    ${shown.length ? `<div>${shown.map(t => txnItem(t, true)).join("")}</div>` : `<div class="empty">ماكو حركات بعد.</div>`}
+    ${all.length > shown.length ? `<button class="btn" id="more">عرض المزيد</button>` : ""}</section>`;
+  $("#app").querySelectorAll("[data-tf]").forEach(el => el.onclick = () => { S.txFilter = el.dataset.tf; S.txShow = 150; render(); });
+  $("#app").querySelectorAll("[data-c]").forEach(el => el.onclick = () => openCustomer(el.dataset.c));
+  if ($("#more")) $("#more").onclick = () => { S.txShow += 150; render(); };
+}
+
+function viewReports(b){
+  const now = new Date(); const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const all = totals(), month = totals(monthStart);
+  const monthName = new Intl.DateTimeFormat("ar-IQ-u-nu-latn",{month:"long",year:"numeric"}).format(now);
+  const block = (title, t) => `<section class="card rep"><h3>${title}</h3>
+    <div class="kv"><span>ديون جديدة</span><b class="num red">${fmt(t.debt.IQD,"IQD")}${t.debt.USD?" · "+fmt(t.debt.USD,"USD"):""}</b></div>
+    <div class="kv"><span>مبالغ مستلمة</span><b class="num green">${fmt(t.pay.IQD,"IQD")}${t.pay.USD?" · "+fmt(t.pay.USD,"USD"):""}</b></div>
+    <div class="kv"><span>الصافي</span><b class="num">${fmt(t.debt.IQD-t.pay.IQD,"IQD")}${(t.debt.USD||t.pay.USD)?" · "+fmt(t.debt.USD-t.pay.USD,"USD"):""}</b></div></section>`;
+  const byEmp = new Map();
+  for (const t of S.txns){ if ((t.at||0) < monthStart || !S.customers.has(t.customerId)) continue;
+    const k = t.by || "بدون اسم"; const e = byEmp.get(k) || {n:0, debt:0, pay:0};
+    e.n++; if ((t.currency||"IQD")==="IQD") e[t.type==="debt"?"debt":"pay"] += Number(t.amount)||0; byEmp.set(k, e); }
+  const top = [...S.customers.values()].map(c => ({c, x:b.get(c.id)})).filter(o => o.x.IQD > 0.5).sort((a,c) => c.x.IQD - a.x.IQD).slice(0,5);
+  const max = top[0]?.x.IQD || 1;
+  $("#app").innerHTML = statusBanner() + block("هذا الشهر · " + monthName, month) + block("منذ البداية", all) +
+    `<section class="card rep"><h3>حسب الموظف · هذا الشهر</h3>${byEmp.size ? [...byEmp].sort((a,c)=>c[1].n-a[1].n).map(([k,e]) =>
+      `<div class="kv"><span>${esc(k)} (${e.n} حركة)</span><b class="num"><span class="red">${fmtIQD(e.debt)}</span> / <span class="green">${fmtIQD(e.pay)}</span></b></div>`).join("") : '<div class="empty">ماكو حركات هذا الشهر.</div>'}
+      ${byEmp.size?'<div style="font-size:12px;color:var(--muted)">الأحمر: ديون سجّلها · الأخضر: مبالغ استلمها (بالدينار)</div>':""}</section>
+    <section class="card rep"><h3>أكبر 5 ديون بالدينار</h3>${top.length ? top.map(({c,x}) =>
+      `<div><div class="kv" style="border:0;padding-bottom:4px"><button class="link" data-c="${esc(c.id)}">${esc(c.name)}</button><b class="num red">${fmt(x.IQD,"IQD")}</b></div><div class="bar"><i style="width:${Math.max(4, x.IQD/max*100)}%"></i></div></div>`).join("") : '<div class="empty">ماكو ديون حالياً.</div>'}</section>`;
+  $("#app").querySelectorAll("[data-c]").forEach(el => el.onclick = () => openCustomer(el.dataset.c));
+}
+
+function viewMore(){
+  $("#app").innerHTML = statusBanner() + `
+    <section class="card rep"><h3>اسم الموظف على هذا الموبايل</h3>
+      <div class="kv"><span>الاسم الحالي</span><b>${esc(S.me || "غير محدد")}</b></div>
+      <button class="btn primary" id="setName">تغيير الاسم</button></section>
+    <section class="card rep"><h3>الألوان والمظهر</h3><div style="font-size:14px">غيّر لون التطبيق أو اختار الوضع الفاتح أو الداكن.</div><button class="btn" id="openSet">فتح الإعدادات</button></section>
+    <section class="card rep"><h3>تثبيت الدفتر كتطبيق</h3>
+      <div style="font-size:14px">افتح الدفتر من متصفح Chrome، اضغط زر القائمة (⋮) فوق، واختار «إضافة إلى الشاشة الرئيسية». سوّيها على كل موبايل من الأربعة.</div></section>
+    <section class="card rep"><h3>المحل</h3>
+      <div class="kv"><span>اسم المحل</span><b>${esc(SHOP.name || "—")}</b></div>
+      <div class="kv"><span>كود المحل</span><b class="num">${esc(SHOP.id)}</b></div>
+      <div class="kv"><span>رمز الانضمام</span><b class="num">${esc(SHOP.key || "—")}</b></div>
+      <div style="font-size:13px;color:var(--muted)">لإضافة موبايل ثاني لنفس المحل، أرسله رابط الانضمام. كل الموبايلات تشوف نفس الدفتر وتتحدث فوراً.</div>
+      <div class="sheet-actions"><button class="btn good" id="shareJoin">${I.wa}إرسال رابط الانضمام</button><button class="btn" id="copyJoin">نسخ الرابط</button></div></section>
+    <section class="card rep"><h3>الترخيص</h3>
+      <div class="kv"><span>كود الجهاز</span><b class="num">${esc(LIC.devText)}</b></div>
+      <div class="kv"><span>الحالة</span><b>${esc(LIC.statusText())}</b></div>
+      <button class="btn" id="openLic">${LIC.licensed ? "إدخال سيريل جديد" : "تفعيل البرنامج"}</button></section>
+    <section class="card rep"><h3>المزامنة</h3>
+      <div class="kv"><span>عدد الزبائن</span><b class="num">${S.customers.size}</b></div>
+      <div class="kv"><span>عدد الحركات</span><b class="num">${S.txns.length}</b></div></section>
+    <section class="card rep" style="text-align:center;font-size:13px;color:var(--muted)"><div>دفتر ديون بايت · تصميم وبرمجة المهندس إحسان العكام</div><div>جميع الحقوق محفوظة لدى بايت — تصميم المهندس احسان العكام</div><div>واتساب: <span class="num">+964 786 749 2096</span></div></section>
+    <section class="card rep" style="align-items:center;text-align:center"><div class="logo" style="color:var(--blue)"><b>BYTE</b><small style="color:var(--ink)">للحلول البرمجية</small></div></section>`;
+  $("#setName").onclick = nameSheet;
+  $("#openSet").onclick = settingsSheet;
+  $("#openLic").onclick = () => LIC.showGate(true);
+  const jl = joinLink();
+  $("#shareJoin").onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent("رابط الانضمام لدفتر ديون " + (SHOP.name||"المحل") + ":\n" + jl), "_blank");
+  $("#copyJoin").onclick = () => { try { navigator.clipboard.writeText(jl).then(() => toast("انتسخ الرابط"), () => toast(jl)); } catch(e){ toast(jl); } };
+}
+
+function viewCustomer(c, x){
+  const txns = S.txns.filter(t => t.customerId === c.id).sort((a,b) => (b.at||0)-(a.at||0));
+  const box = (cur, v) => {
+    const owes = cur==="USD" ? v>0.005 : v>0.5, credit = cur==="USD" ? v<-0.005 : v<-0.5;
+    return `<div class="card bal"><div class="lbl">${cur==="USD"?"الرصيد بالدولار":"الرصيد بالدينار"}</div>
+      <div class="val num ${owes?"red":"green"}">${fmt(Math.abs(v),cur)}</div>
+      <div class="st ${owes?"red":"green"}">${owes?"عليه":credit?"له (دفع زيادة)":"مسدد"}</div></div>`;
+  };
+  let html = statusBanner() + `<section class="card cust-top"><span class="avatar">${esc((c.name||"؟").trim().charAt(0))}</span>
+      <div style="min-width:0"><h2>${esc(c.name)}</h2><div class="ph">${c.phone?`<span class="num">${esc(fmtPhone(c.phone))}</span>`:"بدون رقم موبايل"}${c.note?" · "+esc(c.note):""}</div></div></section>
+    <div class="bal-pair">${box("IQD",x.IQD)}${box("USD",x.USD)}</div>
+    ${W()?`<div class="big-actions"><button class="big add" id="addDebt">${I.plus}إضافة دين</button><button class="big recv" id="addPay">${I.coinCheck}استلام مبلغ</button></div>
+      <button class="btn wa" id="waBtn">${I.wa}تذكير بالواتساب</button>`:""}
+    <h3 class="sec">سجل الحركات (${txns.length})</h3>`;
+  html += txns.length ? `<section class="card txl">${txns.map(t => txnItem(t,false)).join("")}</section>` : `<div class="empty">ماكو حركات بعد.</div>`;
+  if (W()) html += `<div class="link-row"><button class="link" id="editC">تعديل بيانات الزبون</button><button class="link danger" id="delC">حذف الزبون</button></div>`;
+  $("#app").innerHTML = html;
+  if (!W()) return;
+  $("#addDebt").onclick = () => txnSheet(c, "debt");
+  $("#addPay").onclick = () => txnSheet(c, "pay");
+  $("#waBtn").onclick = () => waSheet(c, x);
+  $("#editC").onclick = () => customerSheet(c);
+  $("#delC").onclick = () => confirmSheet(`حذف «${c.name}» وكل حركاته (${txns.length})؟ ما يمكن التراجع.`, "احذف الزبون", async () => {
+    for (const t of txns) await S.db.collection("txns").doc(t.id).delete();
+    await S.db.collection("customers").doc(c.id).delete();
+    toast("انحذف الزبون"); pushed = false; location.hash = "customers";
+  });
+  $("#app").querySelectorAll("[data-del]").forEach(el => el.onclick = () => {
+    const t = txns.find(z => z.id === el.dataset.del);
+    confirmSheet(`حذف حركة ${t.type==="debt"?"الدين":"التسديد"} بمبلغ ${fmt(Number(t.amount)||0,t.currency)}؟`, "احذف الحركة", async () => {
+      await S.db.collection("txns").doc(t.id).delete(); toast("انحذفت الحركة");
+    });
+  });
+}
+
+/* ---------- sheets ---------- */
+function sheet(inner, onMount){
+  const root = $("#sheetRoot");
+  root.innerHTML = `<div class="scrim"><div class="sheet" role="dialog" aria-modal="true">${inner}</div></div>`;
+  const close = () => { root.innerHTML = ""; };
+  root.querySelector(".scrim").addEventListener("click", e => { if (e.target.classList.contains("scrim")) close(); });
+  root.querySelectorAll("[data-close]").forEach(b => b.onclick = close);
+  onMount && onMount(root.querySelector(".sheet"), close);
+}
+function busy(btn, fn, errEl){
+  return async () => {
+    btn.disabled = true; errEl.textContent = "";
+    try { await fn(); }
+    catch(e){ errEl.textContent = e && (e.code === "invalid_argument" || e.code === "permission-denied") ? "ما عندك صلاحية تعديل هذا الدفتر." : e && e.code === "quota_exceeded" ? "الدفتر امتلأ، احذف حركات قديمة." : (e && e.userMsg) || "صار خطأ بالحفظ، حاول مرة ثانية."; btn.disabled = false; }
+  };
+}
+function parseAmount(v){ const n = parseFloat(toLatin(v).replace(/[,\s]/g,"")); return isFinite(n) && n > 0 ? n : null; }
+
+function pickCustomer(type){
+  const b = balances();
+  sheet(`<h3>${type==="debt"?"إضافة دين — اختار الزبون":"استلام مبلغ — اختار الزبون"}</h3>
+    <div class="search">${I.search}<input id="pq" type="search" placeholder="ابحث بالاسم أو الرقم" autocomplete="off"></div>
+    ${type==="debt"?`<button class="btn primary" id="pNew">${I.plus} زبون جديد</button>`:""}
+    <div class="pick" id="plist"></div><button class="btn ghost" data-close>إلغاء</button>`,
+  (el, close) => {
+    const paint = () => {
+      const q = toLatin(el.querySelector("#pq").value).trim().toLowerCase();
+      let list = [...S.customers.values()].map(c => ({c, x:b.get(c.id)}))
+        .filter(({c,x}) => (!q || (c.name||"").toLowerCase().includes(q) || toLatin(c.phone||"").includes(q)) && (type==="debt" || OWE(x) || q))
+        .sort((a,c2) => c2.x.last - a.x.last).slice(0, 40);
+      el.querySelector("#plist").innerHTML = list.length ? list.map(({c,x}) => customerRow(c,x)).join("")
+        : `<div class="empty">${S.customers.size ? "ماكو نتائج." : "ماكو زبائن بعد."}</div>`;
+      wireRows(el.querySelector("#plist"), id => { close(); txnSheet(S.customers.get(id), type); });
+    };
+    el.querySelector("#pq").addEventListener("input", paint); paint();
+    if (el.querySelector("#pNew")) el.querySelector("#pNew").onclick = () => { close(); customerSheet(null, id => { const c = S.customers.get(id) || {id, name: "الزبون"}; txnSheet(c, "debt"); }); };
+  });
+}
+
+function txnSheet(c, type){
+  let cur = lsGet("debtbook.cur") === "USD" ? "USD" : "IQD";
+  sheet(`<h3>${type==="debt"?"دين جديد على":"استلام مبلغ من"} ${esc(c.name)}</h3>
+    <div class="seg" role="group" aria-label="العملة"><button data-cur="IQD">دينار عراقي</button><button data-cur="USD">دولار</button></div>
+    <div class="field"><label for="amt">المبلغ</label><input id="amt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off"></div>
+    <div class="field"><label for="note">ملاحظة (اختياري)</label><input id="note" placeholder="${type==="debt"?"مثلاً: كارتون زيت + سكر":"مثلاً: دفع نقداً"}"></div>
+    <div class="err" id="err"></div>
+    <div class="sheet-actions"><button class="btn ${type==="debt"?"primary":"good"}" id="save">حفظ</button><button class="btn ghost" data-close>إلغاء</button></div>`,
+  (el, close) => {
+    const segs = el.querySelectorAll("[data-cur]");
+    const paint = () => segs.forEach(s => s.setAttribute("aria-pressed", s.dataset.cur===cur));
+    segs.forEach(s => s.onclick = () => { cur = s.dataset.cur; lsSet("debtbook.cur", cur); paint(); }); paint();
+    const amt = el.querySelector("#amt");
+    amt.addEventListener("input", () => { if (cur !== "IQD") return; const raw = toLatin(amt.value).replace(/[^\d]/g,""); amt.value = raw ? Number(raw).toLocaleString("en-US") : ""; });
+    setTimeout(() => amt.focus(), 50);
+    const save = el.querySelector("#save");
+    save.onclick = busy(save, async () => {
+      const a = parseAmount(amt.value); if (!a) throw {userMsg:"اكتب مبلغ صحيح أكبر من صفر."};
+      if (!LIC.canOp()){ close(); LIC.showBlocked(); return; }
+      await S.db.collection("txns").doc(genId()).set({customerId:c.id, type, amount: cur==="USD" ? Math.round(a*100)/100 : Math.round(a), currency:cur,
+        note: el.querySelector("#note").value.trim().slice(0,300), at: Date.now(), by: S.me || "", byId: S.userId || null});
+        LIC.countOp(); close(); toast(type==="debt" ? "تسجّل الدين" : "تسجّل المبلغ المستلم");
+    }, el.querySelector("#err"));
+  });
+}
+
+function customerSheet(existing, after){
+  sheet(`<h3>${existing?"تعديل الزبون":"زبون جديد"}</h3>
+    <div class="field"><label for="cn">الاسم</label><input id="cn" value="${esc(existing?.name||"")}" autocomplete="off"></div>
+    <div class="field"><label for="cp">رقم الموبايل (للواتساب)</label><input id="cp" inputmode="tel" class="num" style="text-align:right" placeholder="07XX XXX XXXX" value="${esc(existing?.phone||"")}"></div>
+    <div class="field"><label for="cnote">ملاحظة (اختياري)</label><input id="cnote" placeholder="مثلاً: المنطقة أو مكان العمل" value="${esc(existing?.note||"")}"></div>
+    <div class="err" id="err"></div>
+    <div class="sheet-actions"><button class="btn primary" id="save">${existing?"حفظ التعديل":"إضافة الزبون"}</button><button class="btn ghost" data-close>إلغاء</button></div>`,
+  (el, close) => {
+    setTimeout(() => el.querySelector("#cn").focus(), 50);
+    const save = el.querySelector("#save");
+    save.onclick = busy(save, async () => {
+      const name = el.querySelector("#cn").value.trim().slice(0,80);
+      if (!name) throw {userMsg:"اكتب اسم الزبون."};
+      const phone = toLatin(el.querySelector("#cp").value).replace(/[^\d+ ]/g,"").trim().slice(0,20);
+      const note = el.querySelector("#cnote").value.trim().slice(0,200);
+      if (existing){
+        await S.db.collection("customers").doc(existing.id).update({name, phone, note});
+        close(); toast("انحفظ التعديل");
+      } else {
+        const dup = [...S.customers.values()].find(c => c.name.trim() === name);
+        if (dup && !save.dataset.ok){ save.dataset.ok = "1"; throw {userMsg:"يوجد زبون بنفس الاسم. اضغط «إضافة الزبون» مرة ثانية إذا تريد تضيفه."}; }
+        if (!LIC.canOp()){ close(); LIC.showBlocked(); return; }
+        const id = genId();
+        await S.db.collection("customers").doc(id).set({name, phone, note, createdAt: Date.now(), createdBy: S.me || ""});
+        S.customers.set(id, {id, name, phone, note, createdAt: Date.now()});
+        LIC.countOp(); close(); toast("انضاف الزبون"); after && after(id);
+      }
+    }, el.querySelector("#err"));
+  });
+}
+
+function waNumber(p){
+  let d = toLatin(p).replace(/\D/g,"");
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.startsWith("0")) d = "964" + d.slice(1);
+  else if (d.length === 10 && d.startsWith("7")) d = "964" + d;
+  return d;
+}
+const DEFAULT_TPL = "مرحباً {الاسم}،\nنذكّركم بأن المبلغ المتبقي بذمتكم هو: {المبلغ}.\nنرجو التسديد بأقرب وقت، وشكراً لتعاملكم معنا.";
+function waMessage(c, x){
+  const parts = [];
+  if (x.IQD > 0.5) parts.push(fmtIQD(x.IQD) + " دينار");
+  if (x.USD > 0.005) parts.push(fmtUSD(x.USD) + " دولار");
+  if (!parts.length) return `مرحباً ${c.name}،\nحسابكم لدينا مسدد بالكامل. شكراً لتعاملكم معنا.`;
+  return (S.tpl || DEFAULT_TPL).split("{الاسم}").join(c.name).split("{المبلغ}").join(parts.join(" و "));
+}
+const waHref = (c, x) => "https://wa.me/" + waNumber(c.phone) + "?text=" + encodeURIComponent(waMessage(c, x));
+const sentNow = new Set();
+function waAllSheet(b){
+  const list = [...S.customers.values()].map(c => ({c, x:b.get(c.id)})).filter(o => OWE(o.x)).sort((a,c2) => (c2.x.IQD + c2.x.USD*1500) - (a.x.IQD + a.x.USD*1500));
+  sheet(`<h3>تذكير المديونين بالواتساب</h3>
+    <div style="font-size:14px;color:var(--muted)">اضغط «إرسال» على كل زبون، ينفتح الواتساب والرسالة جاهزة، بس اضغط إرسال بالواتساب وارجع للدفتر. الواتساب ما يسمح بالإرسال الجماعي التلقائي.</div>
+    <div class="pick">${list.map(({c,x}) => `<div class="wa-item"><span class="avatar" style="width:40px;height:40px;font-size:17px">${esc(c.name.trim().charAt(0))}</span>
+      <div class="who"><div class="nm" style="font-weight:800">${esc(c.name)}</div><div class="amt num">${[x.IQD>0.5?fmtIQD(x.IQD)+" د.ع":"", x.USD>0.005?"$"+fmtUSD(x.USD):""].filter(Boolean).join(" · ")}</div></div>
+      ${c.phone ? `<a href="${esc(waHref(c,x))}" target="_blank" rel="noopener" data-sent="${esc(c.id)}" class="${sentNow.has(c.id)?"sent":""}">${I.wa}${sentNow.has(c.id)?"انرسل":"إرسال"}</a>` : `<span class="nophone">بدون رقم</span>`}</div>`).join("")}</div>
+    <button class="btn ghost" data-close>إغلاق</button>`,
+  el => el.querySelectorAll("[data-sent]").forEach(a => a.addEventListener("click", () => { sentNow.add(a.dataset.sent); a.classList.add("sent"); a.lastChild.textContent = "انرسل"; })));
+}
+function waSheet(c, x){
+  const msg = waMessage(c, x);
+  const num = c.phone ? waNumber(c.phone) : "";
+  const href = num ? waHref(c, x) : "";
+  sheet(`<h3>تذكير بالواتساب</h3>
+    <div class="msg-preview" id="msg">${esc(msg)}</div>
+    ${num ? `<div style="color:var(--muted);font-size:13px">يرسل إلى <span class="num">+${esc(num)}</span></div>` : `<div class="err">ماكو رقم موبايل لهذا الزبون. أضفه من «تعديل بيانات الزبون»، أو انسخ الرسالة.</div>`}
+    <div class="sheet-actions">
+      ${num ? `<a class="btn good" href="${esc(href)}" target="_blank" rel="noopener">${I.wa}فتح الواتساب</a>` : ""}
+      <button class="btn" id="copy">نسخ الرسالة</button></div>
+    <button class="btn ghost" data-close>إغلاق</button>`,
+  (el) => {
+    el.querySelector("#copy").onclick = () => {
+      const fallback = () => { const r = document.createRange(); r.selectNodeContents(el.querySelector("#msg")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("حدد النص وانسخه"); };
+      try { navigator.clipboard.writeText(msg).then(() => toast("انتسخت الرسالة"), fallback); } catch(e){ fallback(); }
+    };
+  });
+}
+
+function alertsSheet(b){
+  const list = alerts(b);
+  sheet(`<h3>التنبيهات</h3>
+    <div style="font-size:14px;color:var(--muted)">زبائن عليهم دين وما سددوا شي من أكثر من 30 يوم.</div>
+    <div class="pick">${list.length ? list.map(({c,x,days}) => customerRow(c,x).replace('<span class="chev">', `<span style="font-size:12px;color:var(--red);font-weight:700;white-space:nowrap">${days} يوم</span><span class="chev">`)).join("") : '<div class="empty">ماكو تنبيهات. كل الزبائن سددوا خلال آخر 30 يوم.</div>'}</div>
+    <button class="btn ghost" data-close>إغلاق</button>`,
+  (el, close) => { el.querySelector(".pick").addEventListener("click", e => { if (e.target.closest("[data-wa]")) close(); }, true); wireRows(el, id => { close(); openCustomer(id); }); });
+}
+
+function confirmSheet(text, yesLabel, fn){
+  sheet(`<h3>تأكيد</h3><p style="margin:0">${esc(text)}</p><div class="err" id="err"></div>
+    <div class="sheet-actions"><button class="btn danger" id="yes">${esc(yesLabel)}</button><button class="btn ghost" data-close>إلغاء</button></div>`,
+  (el, close) => { const y = el.querySelector("#yes"); y.onclick = busy(y, async () => { await fn(); close(); }, el.querySelector("#err")); });
+}
+
+function nameSheet(){
+  sheet(`<h3>اسم الموظف على هذا الموبايل</h3>
+    <p style="margin:0;color:var(--muted);font-size:14px">كل دين أو مبلغ تسجله من هذا الموبايل ينحفظ بهذا الاسم، حتى تعرف منو سجّل كل حركة.</p>
+    <div class="field"><label for="mn">الاسم</label><input id="mn" value="${esc(S.me)}" placeholder="مثلاً: أحمد" autocomplete="off"></div>
+    <div class="err" id="err"></div>
+    <div class="sheet-actions"><button class="btn primary" id="save">حفظ</button><button class="btn ghost" data-close>إلغاء</button></div>`,
+  (el, close) => {
+    setTimeout(() => el.querySelector("#mn").focus(), 50);
+    el.querySelector("#save").onclick = () => {
+      const v = el.querySelector("#mn").value.trim().slice(0,40);
+      if (!v){ el.querySelector("#err").textContent = "اكتب اسمك."; return; }
+      S.me = v; lsSet("debtbook.me", v); close(); render(); toast("انحفظ الاسم");
+    };
+  });
+}
+
+function settingsSheet(){
+  const orig = S.color; let pick = S.color, mode = S.mode;
+  const isPreset = PRESETS.some(p => p[0] === pick.toLowerCase());
+  sheet(`<h3>الإعدادات</h3>
+    <div class="set-sec"><h4>اسم الموظف على هذا الموبايل</h4>
+      <div class="field"><input id="mn" value="${esc(S.me)}" placeholder="مثلاً: أحمد" autocomplete="off" aria-label="اسم الموظف"></div></div>
+    <div class="set-sec"><h4>لون التطبيق</h4>
+      <div class="swatches" id="sws">${PRESETS.map(([hx,nm]) => `<button class="sw" data-hex="${hx}"><i style="background:${hx}"></i>${nm}</button>`).join("")}
+        <label class="sw" id="customSw"><input type="color" id="cc" value="${isPreset ? "#e0457b" : esc(pick)}" aria-label="لون مخصص">لون خاص</label></div>
+      <div class="hint">اللون يتغير على كل موبايلات المحل.</div></div>
+    <div class="set-sec"><h4>رسالة تذكير الواتساب</h4>
+      <textarea class="tpl" id="tpl" aria-label="نص رسالة التذكير">${esc(S.tpl || DEFAULT_TPL)}</textarea>
+      <div class="hint">اكتب {الاسم} و {المبلغ} وتنستبدل تلقائياً لكل زبون.</div></div>
+    <div class="set-sec"><h4>الوضع</h4>
+      <div class="seg seg3" id="modes"><button data-m="auto">تلقائي</button><button data-m="light">فاتح</button><button data-m="dark">داكن</button></div>
+      <div class="hint">هذا الخيار لهذا الموبايل فقط.</div></div>
+    <div class="err" id="err"></div>
+    <div class="sheet-actions"><button class="btn primary" id="save">حفظ</button><button class="btn ghost" id="cancel">إلغاء</button></div>
+    <button class="link" id="reset" style="align-self:center">رجوع للون الأزرق الأصلي</button>`,
+  (el, close) => {
+    const paint = () => {
+      el.querySelectorAll("[data-hex]").forEach(b => b.setAttribute("aria-pressed", b.dataset.hex === pick.toLowerCase()));
+      el.querySelector("#customSw").setAttribute("aria-pressed", !PRESETS.some(p => p[0] === pick.toLowerCase()));
+      el.querySelectorAll("[data-m]").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === mode));
+    };
+    const preview = hx => { pick = hx.toLowerCase(); applyColor(pick); paint(); };
+    el.querySelectorAll("[data-hex]").forEach(b => b.onclick = () => preview(b.dataset.hex));
+    const cc = el.querySelector("#cc");
+    cc.addEventListener("input", () => preview(cc.value));
+    el.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { mode = b.dataset.m; applyMode(mode); paint(); });
+    el.querySelector("#reset").onclick = () => preview(DEFAULT_COLOR);
+    const revert = () => { applyColor(orig); applyMode(S.mode); close(); };
+    el.querySelector("#cancel").onclick = revert;
+    el.parentElement.addEventListener("click", e => { if (e.target === el.parentElement) { applyColor(orig); applyMode(S.mode); } });
+    paint();
+    const save = el.querySelector("#save");
+    save.onclick = busy(save, async () => {
+      const v = el.querySelector("#mn").value.trim().slice(0,40);
+      if (v){ S.me = v; lsSet("debtbook.me", v); }
+      S.mode = mode; lsSet("debtbook.mode", mode);
+      S.color = pick; lsSet("debtbook.color", pick);
+      let tpl = el.querySelector("#tpl").value.trim().slice(0,600); if (tpl === DEFAULT_TPL) tpl = "";
+      const tplChanged = tpl !== (S.tpl || "");
+      S.tpl = tpl; lsSet("debtbook.tpl", tpl);
+      if (W() && (pick !== orig || tplChanged)) await S.db.doc("settings/app").set({color: pick, tpl, updatedBy: S.me || "", at: Date.now()});
+      close(); render(); toast("انحفظت الإعدادات");
+    }, el.querySelector("#err"));
+  });
+}
+
+let toastT;
+function toast(t){ let el = $(".toast"); if (!el){ el = document.createElement("div"); el.className = "toast"; el.setAttribute("role","status"); document.body.appendChild(el); }
+  el.textContent = t; clearTimeout(toastT); toastT = setTimeout(() => el.remove(), 2200); }
+
+/* ---------- licensing ---------- */
+const PUB_B64 = "BOc/Kt9BT0PDOS7rKwsObGBmeuDu9/Y87HiTUolYple9z6cxsHab51h6J+9OYoDf9FiC3bo00cTCCsFMXkAiDi4=";
+const PRODUCT = 0x44, EPOCH = Date.UTC(2025,0,1), TRIAL_OPS = 5;
+const SELLER_WA = "9647867492096";
+const B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+function b32enc(bytes){let bits=0,val=0,out="";for(const b of bytes){val=(val<<8)|b;bits+=8;while(bits>=5){out+=B32[(val>>>(bits-5))&31];bits-=5;}val&=(1<<bits)-1;}if(bits>0)out+=B32[(val<<(5-bits))&31];return out;}
+function b32dec(str){const s=String(str).toUpperCase().replace(/[^0-9A-Z]/g,"").replace(/O/g,"0").replace(/[IL]/g,"1");let bits=0,val=0;const out=[];for(const ch of s){const i=B32.indexOf(ch);if(i<0)return null;val=(val<<5)|i;bits+=5;if(bits>=8){out.push((val>>>(bits-8))&255);bits-=8;}val&=(1<<bits)-1;}return new Uint8Array(out);}
+const ub = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+/* IndexedDB mirror so device code / serial / trial survive a localStorage wipe */
+const IDB = {
+  open(){ return new Promise((res) => { try { const r = indexedDB.open("bytedebts", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch(e){ res(null); } }); },
+  async get(k){ const db = await this.open(); if (!db) return null; return new Promise(res => { try { const q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result ?? null); q.onerror = () => res(null); } catch(e){ res(null); } }); },
+  async set(k,v){ const db = await this.open(); if (!db) return; try { db.transaction("kv","readwrite").objectStore("kv").put(v,k); } catch(e){} }
+};
+async function persist(k){ const ls = lsGet(k); const idb = await IDB.get(k); const v = ls || idb; if (v){ if (!ls) lsSet(k, v); if (!idb) IDB.set(k, v); } return v; }
+function store(k, v){ lsSet(k, v); IDB.set(k, v); }
+
+const LIC = {
+  dev:null, devText:"", licensed:false, exp:0, type:0, clockBad:false, trialUsed:0,
+  async init(){
+    let d = await persist("bd.dev");
+    if (!d || !b32dec(d) || b32dec(d).length !== 10){ d = b32enc(crypto.getRandomValues(new Uint8Array(10))); store("bd.dev", d); }
+    this.dev = b32dec(d); this.devText = d.match(/.{4}/g).join("-");
+    const now = Date.now(); const last = +(await persist("bd.ls") || 0);
+    this.clockBad = !!last && now < last - 864e5;
+    if (!this.clockBad && now > last) store("bd.ls", String(now));
+    this.trialUsed = +(await persist("bd.trial") || 0);
+    const ser = await persist("bd.serial");
+    if (ser) await this.check(ser, false);
+  },
+  async check(serial, save){
+    const all = b32dec(serial || "");
+    if (!all || all.length !== 80) return "السيريل ناقص أو بيه حرف غلط.";
+    const p = all.slice(0,16), sig = all.slice(16);
+    if (p[0] !== 1 || p[1] !== PRODUCT) return "هذا السيريل مو لدفتر الديون.";
+    for (let i=0;i<10;i++) if (p[2+i] !== this.dev[i]) return "هذا السيريل لجهاز ثاني. تأكد من كود الجهاز.";
+    let ok = false;
+    try { const key = await crypto.subtle.importKey("raw", ub(PUB_B64), {name:"ECDSA", namedCurve:"P-256"}, false, ["verify"]);
+      ok = await crypto.subtle.verify({name:"ECDSA", hash:"SHA-256"}, key, sig, p); } catch(e){ ok = false; }
+    if (!ok) return "السيريل غير صحيح.";
+    const exp = (p[13]<<8) | p[14];
+    const expAt = exp ? EPOCH + (exp+1)*864e5 : 0;
+    if (exp && Date.now() > expAt) return "هذا السيريل منتهي. اطلب سيريل جديد.";
+    if (this.clockBad) return "تاريخ الموبايل غلط. صحح التاريخ والوقت وارجع جرب.";
+    this.licensed = true; this.exp = expAt; this.type = p[12];
+    if (save) store("bd.serial", serial.trim());
+    return null;
+  },
+  shopTrial(){ return SHOP.doc ? (+SHOP.doc.trialOps || 0) : 0; },
+  left(){ return Math.max(0, TRIAL_OPS - Math.max(this.trialUsed, this.shopTrial())); },
+  canOp(){ return this.licensed || this.left() > 0; },
+  countOp(){
+    if (this.licensed) return;
+    this.trialUsed++; store("bd.trial", String(this.trialUsed));
+    if (SHOP.ref) SHOP.ref.update({trialOps: firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
+    if (this.left() <= 0) setTimeout(() => this.showBlocked(), 400);
+    render();
+  },
+  statusText(){
+    if (this.licensed) return this.exp ? "مفعّل حتى " + new Date(this.exp - 864e5).toLocaleDateString("ar-IQ-u-nu-latn") : "مفعّل مدى الحياة";
+    return "نسخة تجريبية — باقي " + this.left() + " من " + TRIAL_OPS + " عمليات";
+  },
+  bar(){
+    if (this.licensed){
+      if (this.exp && this.exp - Date.now() < 7*864e5) return `<div class="trial-bar"><span>الاشتراك ينتهي خلال ${Math.max(0,Math.ceil((this.exp-Date.now())/864e5))} يوم</span><button id="trialAct">تجديد</button></div>`;
+      return "";
+    }
+    return `<div class="trial-bar"><span>نسخة تجريبية: باقي ${this.left()} عمليات</span><button id="trialAct">تفعيل</button></div>`;
+  },
+  showBlocked(){ toast("خلصت التجربة — فعّل البرنامج"); this.showGate(true); },
+  showGate(closable){ gateLicense(closable); }
+};
+
+/* ---------- gate screens ---------- */
+const isStandalone = () => window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+let deferredPrompt = null, gateDone = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; const b = document.getElementById("instBtn"); if (b) b.disabled = false; });
+window.addEventListener("appinstalled", () => { lsSet("bd.installed", "1"); });
+const GLOGO = `<div class="logo"><b>BYTE</b><small>للحلول البرمجية</small></div>`;
+const GFOOT = `<div class="foot">دفتر ديون بايت · تصميم وبرمجة المهندس إحسان العكام<br>جميع الحقوق محفوظة لدى بايت — تصميم المهندس احسان العكام</div>`;
+function gate(html){ const g = $("#gate"); g.hidden = false; g.innerHTML = `<div class="gate-in">${GLOGO}${html}${GFOOT}</div>`; g.scrollTop = 0; return g; }
+function closeGate(){ $("#gate").hidden = true; $("#gate").innerHTML = ""; }
+
+function gateInstall(){
+  return new Promise(done => {
+    const finish = () => { closeGate(); done(); };
+    const ios = isIOS();
+    const g = gate(`<h2>ثبّت دفتر الديون على شاشة الموبايل</h2>
+      <p>حتى تصير عندك أيقونة على الشاشة الرئيسية وينفتح مثل التطبيق.</p>
+      <div class="gcard">${ios ? `
+        <h3>على الآيفون</h3>
+        <ol class="steps">
+          <li>افتح هذا الرابط من متصفح <b>Safari</b>.</li>
+          <li>اضغط زر <b>المشاركة</b> (المربع اللي بيه سهم لفوك) أسفل الشاشة.</li>
+          <li>اختار <b>«إضافة إلى الشاشة الرئيسية»</b> ثم <b>إضافة</b>.</li>
+          <li>سكّر Safari وافتح الدفتر من الأيقونة الجديدة.</li>
+        </ol>` : `
+        <h3>على الأندرويد</h3>
+        <button class="btn primary" id="instBtn" ${deferredPrompt ? "" : "disabled"}>${I.plus}تثبيت على الشاشة الرئيسية</button>
+        <div style="font-size:13px;color:var(--muted)" id="instHint">إذا الزر ما اشتغل: اضغط قائمة Chrome (⋮) فوك واختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»، وبعدها افتح الدفتر من الأيقونة.</div>`}
+      </div>
+      <button class="skip" id="skipInst">متابعة بدون تثبيت</button>`);
+    const ib = g.querySelector("#instBtn");
+    if (ib) ib.onclick = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const r = await deferredPrompt.userChoice.catch(() => null); deferredPrompt = null; ib.disabled = true;
+      if (r && r.outcome === "accepted"){ lsSet("bd.installed", "1"); g.querySelector("#instHint").textContent = "انضافت الأيقونة على الشاشة. افتح الدفتر منها."; }
+    };
+    g.querySelector("#skipInst").onclick = () => { lsSet("bd.instSkip", String(Date.now())); finish(); };
+  });
+}
+
+function gateLicense(closable){
+  return new Promise(done => {
+    const left = LIC.left();
+    const g = gate(`<h2>${LIC.licensed ? "تجديد التفعيل" : "تفعيل دفتر الديون"}</h2>
+      <p>أرسل كود الجهاز للمبيعات حتى يوصلك سيريل التفعيل.</p>
+      <div class="gcard">
+        <h3>كود هذا الجهاز</h3>
+        <div class="devcode"><b>${LIC.devText}</b><button class="btn" id="cpDev" style="padding:8px 12px">نسخ</button></div>
+        <a class="btn good" href="https://wa.me/${SELLER_WA}?text=${encodeURIComponent("أريد تفعيل دفتر ديون بايت\nكود الجهاز: " + LIC.devText)}" target="_blank" rel="noopener">${I.wa}أرسل الكود بالواتساب</a>
+        <div class="field"><label for="serial">سيريل التفعيل</label><textarea class="serial" id="serial" placeholder="الصق السيريل هنا" autocomplete="off" spellcheck="false"></textarea></div>
+        <div class="err" id="lerr"></div>
+        <button class="btn primary" id="actBtn">تفعيل</button>
+      </div>
+      ${LIC.licensed ? "" : `<div class="gcard"><h3>تجربة البرنامج</h3>
+        <div style="font-size:14px">${left > 0 ? `تكدر تجرب الدفتر بـ ${TRIAL_OPS} عمليات (إضافة زبون أو دين أو تسديد). باقي لك <b>${left}</b>.` : `خلصت عمليات التجربة (${TRIAL_OPS}). فعّل البرنامج حتى تكمل التسجيل. تكدر تشوف البيانات الموجودة بس.`}</div>
+        <button class="btn" id="trialBtn">${left > 0 ? "ابدأ التجربة" : "عرض الدفتر فقط"}</button></div>`}
+      ${closable && LIC.licensed ? `<button class="skip" id="closeG">رجوع</button>` : ""}`);
+    g.querySelector("#cpDev").onclick = () => { try { navigator.clipboard.writeText(LIC.devText).then(() => toast("انتسخ الكود"), () => {}); } catch(e){} };
+    const act = g.querySelector("#actBtn");
+    act.onclick = async () => {
+      act.disabled = true; g.querySelector("#lerr").textContent = "";
+      const err = await LIC.check(g.querySelector("#serial").value, true);
+      act.disabled = false;
+      if (err){ g.querySelector("#lerr").textContent = err; return; }
+      toast("تم التفعيل"); closeGate(); render(); done();
+    };
+    const tb = g.querySelector("#trialBtn");
+    if (tb) tb.onclick = () => { lsSet("bd.trialStarted", "1"); closeGate(); render(); done(); };
+    const cg = g.querySelector("#closeG");
+    if (cg) cg.onclick = () => { closeGate(); done(); };
+  });
+}
+
+/* ---------- shop (Firebase) ---------- */
+const SHOP = { id:"", key:"", name:"", ref:null, doc:null };
+const KEYCH = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const rcode = n => { const r = crypto.getRandomValues(new Uint8Array(n)); let o=""; for (const b of r) o += KEYCH[b % KEYCH.length]; return o; };
+function joinLink(){ return location.origin + location.pathname + "?join=" + SHOP.id + "." + SHOP.key; }
+async function joinShop(fs, uid, id, key, myName){
+  await fs.doc("shops/" + id + "/members/" + uid).set({key, name: myName || "", at: Date.now()});
+  const snap = await fs.doc("shops/" + id).get();
+  if (!snap.exists) throw {userMsg:"كود المحل غلط."};
+  return snap.data();
+}
+function gateShop(fs, uid, pre){
+  return new Promise(done => {
+    let tab = pre ? "join" : "new";
+    const draw = () => {
+      const g = gate(`<h2>${tab==="new" ? "إنشاء دفتر لمحلك" : "الانضمام لدفتر محل"}</h2>
+        <div class="gcard">
+          <div class="tabs2"><button data-t="new" aria-pressed="${tab==="new"}">محل جديد</button><button data-t="join" aria-pressed="${tab==="join"}">انضمام لمحل</button></div>
+          ${tab==="new" ? `
+            <div class="field"><label for="sn">اسم المحل</label><input id="sn" placeholder="مثلاً: أسواق الرحمة" autocomplete="off"></div>
+            <div class="field"><label for="un">اسمك</label><input id="un" value="${esc(S.me)}" placeholder="مثلاً: أحمد" autocomplete="off"></div>
+            <div style="font-size:13px;color:var(--muted)">بعدها تكدر تضيف موبايلات الموظفين من «المزيد» ← «إرسال رابط الانضمام».</div>` : `
+            <div class="field"><label for="jc">كود المحل</label><input id="jc" class="num" style="text-align:right;text-transform:uppercase" value="${esc(pre?.id||"")}" autocomplete="off"></div>
+            <div class="field"><label for="jk">رمز الانضمام</label><input id="jk" class="num" style="text-align:right;text-transform:uppercase" value="${esc(pre?.key||"")}" autocomplete="off"></div>
+            <div class="field"><label for="un">اسمك</label><input id="un" value="${esc(S.me)}" placeholder="مثلاً: علي" autocomplete="off"></div>
+            <div style="font-size:13px;color:var(--muted)">الكود والرمز تلكاهم عند صاحب المحل بقسم «المزيد».</div>`}
+          <div class="err" id="serr"></div>
+          <button class="btn primary" id="go">${tab==="new" ? "إنشاء الدفتر" : "انضمام"}</button>
+        </div>`);
+      g.querySelectorAll("[data-t]").forEach(b => b.onclick = () => { tab = b.dataset.t; draw(); });
+      const go = g.querySelector("#go");
+      go.onclick = async () => {
+        const err = g.querySelector("#serr"); err.textContent = ""; go.disabled = true;
+        const myName = g.querySelector("#un").value.trim().slice(0,40);
+        try {
+          if (!myName) throw {userMsg:"اكتب اسمك."};
+          S.me = myName; lsSet("debtbook.me", myName);
+          let id, key, data;
+          if (tab === "new"){
+            const name = g.querySelector("#sn").value.trim().slice(0,60);
+            if (!name) throw {userMsg:"اكتب اسم المحل."};
+            id = rcode(6); key = rcode(8);
+            await fs.doc("shops/" + id).set({name, joinKey:key, owner:uid, createdAt:Date.now(), trialOps:0});
+            data = await joinShop(fs, uid, id, key, myName);
+          } else {
+            id = g.querySelector("#jc").value.trim().toUpperCase(); key = g.querySelector("#jk").value.trim().toUpperCase();
+            if (!id || !key) throw {userMsg:"اكتب كود المحل ورمز الانضمام."};
+            try { data = await joinShop(fs, uid, id, key, myName); }
+            catch(e){ if (e.userMsg) throw e; throw {userMsg:"الكود أو الرمز غلط، أو ماكو إنترنت."}; }
+          }
+          store("bd.shop", id + "." + key);
+          closeGate(); done({id, key, data});
+        } catch(e){ err.textContent = (e && e.userMsg) || "ما كدرنا نتصل. تأكد من الإنترنت وجرب مرة ثانية."; go.disabled = false; }
+      };
+    };
+    draw();
+  });
+}
+
+/* ---------- data ---------- */
+let rs; function renderSoon(){ clearTimeout(rs); rs = setTimeout(() => { const a = document.activeElement; if (a && a.id === "q") return; render(); }, 30); }
+async function start(){
+  applyColor(S.color); applyMode(S.mode);
+  render();
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  await LIC.init();
+
+  // 1) install to home screen on first run
+  if (!isStandalone() && !lsGet("bd.installed") && !lsGet("bd.instSkip")) await gateInstall();
+  // 2) activation or trial
+  if (!LIC.licensed && !lsGet("bd.trialStarted")) await gateLicense(false);
+
+  // 3) database
+  const cfg = window.BYTE_FIREBASE;
+  if (!window.firebase || !cfg || !cfg.apiKey || /PUT_/.test(cfg.apiKey)){ S.failed = "قاعدة البيانات غير مُعدّة بعد (config.js)."; S.loadedC = S.loadedT = true; render(); return; }
+  firebase.initializeApp(cfg);
+  const fs = firebase.firestore();
+  try { await fs.enablePersistence({synchronizeTabs:true}); } catch(e){}
+  let uid;
+  try { uid = (await firebase.auth().signInAnonymously()).user.uid; }
+  catch(e){ S.failed = "ما كدرنا نتصل بالسيرفر. تأكد من الإنترنت وافتح الدفتر من جديد."; S.loadedC = S.loadedT = true; render(); return; }
+
+  // 4) shop: saved, from a join link, or the create/join screen
+  const params = new URLSearchParams(location.search);
+  let pre = null; const j = params.get("join");
+  if (j && j.includes(".")){ const [a,b] = j.split("."); pre = {id:a.toUpperCase(), key:b.toUpperCase()}; }
+  let saved = await persist("bd.shop");
+  if (pre && saved && saved.split(".")[0] !== pre.id) saved = null;
+  let res = null;
+  if (saved){
+    const [id, key] = saved.split(".");
+    try { res = {id, key, data: await joinShop(fs, uid, id, key, S.me)}; } catch(e){ res = null; }
+  }
+  if (!res) res = await gateShop(fs, uid, pre);
+  if (j) history.replaceState(null, "", location.pathname + location.hash);
+  SHOP.id = res.id; SHOP.key = res.key; SHOP.name = res.data?.name || ""; SHOP.doc = res.data; SHOP.ref = fs.doc("shops/" + res.id);
+  SHOP.ref.onSnapshot(sn => { if (sn.exists){ SHOP.doc = sn.data(); SHOP.name = SHOP.doc.name || ""; renderSoon(); } }, () => {});
+
+  const base = "shops/" + res.id + "/";
+  const db = S.db = { collection: c => fs.collection(base + c), doc: p => fs.doc(base + p) };
+  const timer = setTimeout(() => { S.stale = true; render(); }, 10000);
+  const settle = () => { clearTimeout(timer); S.stale = false; };
+  const onErr = e => { clearTimeout(timer); S.failed = e && e.code === "permission-denied" ? "ما عندك صلاحية على هذا الدفتر. انضم من جديد برابط الانضمام." : "انقطع الاتصال بالدفتر. سكّر البرنامج وافتحه من جديد."; S.loadedC = S.loadedT = true; render(); };
+  db.collection("customers").onSnapshot(snap => { S.customers = new Map(snap.docs.map(d => [d.id, Object.assign({id:d.id}, d.data())])); S.loadedC = true; settle(); renderSoon(); }, onErr);
+  db.collection("txns").onSnapshot(snap => { S.txns = snap.docs.map(d => Object.assign({id:d.id}, d.data())); S.loadedT = true; settle(); renderSoon(); }, onErr);
+  db.doc("settings/app").onSnapshot(snap => {
+    if (snap.exists && typeof snap.data().tpl === "string"){ S.tpl = snap.data().tpl; lsSet("debtbook.tpl", S.tpl); }
+    const c = snap.exists && snap.data().color;
+    if (c && /^#[0-9a-f]{6}$/i.test(c) && c !== S.color && !document.querySelector(".scrim")){ S.color = c; lsSet("debtbook.color", c); applyColor(c); }
+  }, () => {});
+  setInterval(() => { const n = Date.now(); if (n > +(lsGet("bd.ls")||0)) store("bd.ls", String(n)); if (LIC.licensed && LIC.exp && n > LIC.exp){ LIC.licensed = false; render(); } }, 30*60*1000);
+}
+start();
+})();
+</script>
+</body></html>

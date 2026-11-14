@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isMember(shopId) {
+      return signedIn() && exists(/databases/$(database)/documents/shops/$(shopId)/members/$(request.auth.uid));
+    }
+    match /shops/{shopId} {
+      allow create: if signedIn()
+        && request.resource.data.owner == request.auth.uid
+        && request.resource.data.joinKey is string
+        && request.resource.data.joinKey.size() >= 8;
+      allow read: if isMember(shopId);
+      allow update: if isMember(shopId)
+        && request.resource.data.joinKey == resource.data.joinKey
+        && request.resource.data.owner == resource.data.owner
+        && request.resource.data.get('trialOps', 0) >= resource.data.get('trialOps', 0);
+      allow delete: if false;
+
+      match /members/{uid} {
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.key == get(/databases/$(database)/documents/shops/$(shopId)).data.joinKey;
+        allow read, delete: if isMember(shopId);
+      }
+      match /{col}/{docId} {
+        allow read, write: if col != 'members' && isMember(shopId);
+      }
+    }
+  }
+}

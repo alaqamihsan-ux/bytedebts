@@ -239,6 +239,8 @@ textarea.serial{background:var(--bg);border:1.5px solid var(--line);border-radiu
 .tabs2{display:grid;grid-template-columns:1fr 1fr;background:var(--chip);border-radius:12px;padding:4px;gap:4px}
 .tabs2 button{border:0;background:transparent;border-radius:9px;padding:9px;font-weight:800;color:var(--muted)}
 .tabs2 button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+@keyframes iabounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+@media (prefers-reduced-motion:no-preference){#iosArrow .ia-arrow{animation:iabounce 1s ease-in-out infinite}}
 .trial-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff4dc;color:#8a5a00;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14px}
 .trial-bar button{border:0;background:#8a5a00;color:#fff;border-radius:10px;padding:6px 12px;font-weight:800}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
@@ -1013,10 +1015,70 @@ const GFOOT = `<div class="foot">دفتر ديون بايت · تصميم وبر
 function gate(html){ const g = $("#gate"); g.hidden = false; g.innerHTML = `<div class="gate-in">${GLOGO}${html}${GFOOT}</div>`; g.scrollTop = 0; return g; }
 function closeGate(){ $("#gate").hidden = true; $("#gate").innerHTML = ""; }
 
+/* ---- iPhone install guide ---- */
+const IOS_SHARE = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l4-4 4 4M12 3v12"/><path d="M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg>`;
+const IOS_ADD = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>`;
+const IOS_DOTS = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>`;
+function iosDetect(){
+  const ua = navigator.userAgent;
+  if (/FBAN|FBAV|Instagram|Line\/|WhatsApp|Snapchat|GSA\/|Telegram/i.test(ua)) return "inapp";
+  if (/CriOS|EdgiOS|FxiOS/.test(ua)) return "chrome";
+  const v = +((ua.match(/Version\/(\d+)/) || [])[1] || 0);
+  return v >= 26 ? "safari26" : "safari";
+}
+const chip = (ic, txt) => `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:3px 10px;font-weight:800;color:var(--blue);vertical-align:middle">${ic}${txt?`<span>${txt}</span>`:""}</span>`;
+function iosGuide(mode){
+  const tabs = `<div class="tabs2" style="grid-template-columns:repeat(3,1fr)"><button data-im="safari26" aria-pressed="${mode==="safari26"}">آيفون جديد</button><button data-im="safari" aria-pressed="${mode==="safari"}">آيفون قديم</button><button data-im="chrome" aria-pressed="${mode==="chrome"||mode==="inapp"}">Chrome</button></div>`;
+  const big = (n, html) => `<li style="display:flex;gap:12px;align-items:flex-start;font-size:16px;line-height:1.7"><b style="flex:none;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center">${n}</b><span>${html}</span></li>`;
+  let steps;
+  if (mode === "inapp") steps = `
+    <div class="banner warn" style="font-size:15px">الرابط مفتوح من داخل الواتساب أو تطبيق ثاني، ومنه ما يتثبت.</div>
+    <ol class="steps" style="list-style:none;padding:0;gap:14px">
+      ${big(1, `اضغط <b>نسخ الرابط</b> هنا:<br><button class="btn primary" id="copyLink" style="margin-top:6px;width:100%">نسخ الرابط</button>`)}
+      ${big(2, `افتح تطبيق <b>Safari</b> (البوصلة الزرقاء) والصق الرابط فوك واضغط «انتقال».`)}
+      ${big(3, `بعدها تطلعلك هاي الصفحة من جديد وتكمل الخطوات.`)}
+    </ol>`;
+  else if (mode === "chrome") steps = `
+    <ol class="steps" style="list-style:none;padding:0;gap:14px">
+      ${big(1, `اضغط زر المشاركة ${chip(IOS_SHARE)} فوك يم شريط العنوان.`)}
+      ${big(2, `انزل واضغط ${chip(IOS_ADD, "إضافة إلى الشاشة الرئيسية")}`)}
+      ${big(3, `اضغط <b>«إضافة»</b> فوك على اليمين.`)}
+      ${big(4, `ارجع للشاشة الرئيسية وافتح <b>دفتر ديون</b> من الأيقونة.`)}
+    </ol>`;
+  else if (mode === "safari26") steps = `
+    <ol class="steps" style="list-style:none;padding:0;gap:14px">
+      ${big(1, `اضغط زر النقاط الثلاث ${chip(IOS_DOTS)} تحت على اليمين <b>(السهم الأحمر يأشر عليه)</b>.`)}
+      ${big(2, `اضغط ${chip(IOS_SHARE, "مشاركة")}`)}
+      ${big(3, `انزل لتحت واضغط ${chip(IOS_ADD, "إضافة إلى الشاشة الرئيسية")}<br><small style="color:var(--muted)">إذا ما شفته اضغط «عرض المزيد».</small>`)}
+      ${big(4, `خلي «فتح كتطبيق ويب» شغال، واضغط <b>«إضافة»</b>.`)}
+      ${big(5, `افتح <b>دفتر ديون</b> من الأيقونة الجديدة على الشاشة.`)}
+    </ol>`;
+  else steps = `
+    <ol class="steps" style="list-style:none;padding:0;gap:14px">
+      ${big(1, `اضغط زر المشاركة ${chip(IOS_SHARE)} تحت بالنص <b>(السهم الأحمر يأشر عليه)</b>.`)}
+      ${big(2, `انزل لتحت واضغط ${chip(IOS_ADD, "إضافة إلى الشاشة الرئيسية")}`)}
+      ${big(3, `اضغط <b>«إضافة»</b> فوك على اليمين.`)}
+      ${big(4, `افتح <b>دفتر ديون</b> من الأيقونة الجديدة على الشاشة.`)}
+    </ol>`;
+  return `<div style="font-size:13px;color:var(--muted)">اختار نوع جهازك إذا الخطوات ما تطابق اللي تشوفه:</div>${tabs}${steps}`;
+}
+function showIosArrow(mode){
+  let a = document.getElementById("iosArrow");
+  if (!mode || mode === "inapp"){ if (a) a.remove(); return; }
+  if (!a){ a = document.createElement("div"); a.id = "iosArrow"; document.body.appendChild(a); }
+  const top = mode === "chrome";
+  const side = mode === "safari26" ? "right:calc(14px + env(safe-area-inset-right,0px))" : top ? "right:calc(10px + env(safe-area-inset-right,0px))" : "left:50%;transform:translateX(-50%)";
+  a.style.cssText = `position:fixed;z-index:60;${top ? "top:calc(4px + env(safe-area-inset-top,0px))" : "bottom:calc(6px + env(safe-area-inset-bottom,0px))"};${side};pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--f);font-weight:800;color:#fff`;
+  a.innerHTML = top
+    ? `<span class="ia-arrow" style="font-size:40px;line-height:1;color:#ff3b30;text-shadow:0 2px 6px rgba(0,0,0,.4)">⬆</span><span style="background:#ff3b30;border-radius:10px;padding:3px 10px;font-size:14px">اضغط هنا</span>`
+    : `<span style="background:#ff3b30;border-radius:10px;padding:3px 10px;font-size:14px">اضغط هنا</span><span class="ia-arrow" style="font-size:40px;line-height:1;color:#ff3b30;text-shadow:0 2px 6px rgba(0,0,0,.4)">⬇</span>`;
+}
+
 function gateInstall(fromSettings){
   return new Promise(done => {
-    const finish = () => { closeGate(); done(); };
+    const finish = () => { showIosArrow(""); closeGate(); done(); };
     let plat = isIOS() ? "ios" : "android";
+    let iosMode = iosDetect();
     const draw = () => {
       const installed = isStandalone();
       const g = gate(`<h2>ثبّت دفتر الديون على شاشة الموبايل</h2>
@@ -1024,12 +1086,7 @@ function gateInstall(fromSettings){
         <div class="gcard">
           <div class="tabs2"><button data-p="android" aria-pressed="${plat==="android"}">أندرويد</button><button data-p="ios" aria-pressed="${plat==="ios"}">آيفون</button></div>
           ${plat === "ios" ? `
-          <ol class="steps">
-            <li>افتح رابط الدفتر من متصفح <b>Safari</b> (مو من Chrome أو الواتساب).</li>
-            <li>اضغط زر <b>المشاركة</b> (المربع اللي بيه سهم لفوك) أسفل الشاشة.</li>
-            <li>انزل واختار <b>«إضافة إلى الشاشة الرئيسية»</b> ثم <b>إضافة</b>.</li>
-            <li>سكّر Safari وافتح الدفتر من الأيقونة الجديدة.</li>
-          </ol>` : `
+          ${iosGuide(iosMode)}` : `
           <button class="btn primary" id="instBtn" ${deferredPrompt ? "" : "disabled"}>${I.plus}تثبيت على الشاشة الرئيسية</button>
           <ol class="steps" id="instHint">
             <li>إذا الزر ما اشتغل: افتح الرابط من متصفح <b>Chrome</b>.</li>
@@ -1040,6 +1097,10 @@ function gateInstall(fromSettings){
         </div>
         <button class="skip" id="skipInst">${fromSettings ? "رجوع" : "متابعة بدون تثبيت"}</button>`);
       g.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { plat = b.dataset.p; draw(); });
+      g.querySelectorAll("[data-im]").forEach(b => b.onclick = () => { iosMode = b.dataset.im; draw(); });
+      const cl = g.querySelector("#copyLink");
+      if (cl) cl.onclick = () => { const u = location.origin + location.pathname; try { navigator.clipboard.writeText(u).then(() => { cl.textContent = "انتسخ الرابط ✓"; }, () => toast(u)); } catch(e){ toast(u); } };
+      showIosArrow(plat === "ios" && !isStandalone() ? iosMode : "");
       const ib = g.querySelector("#instBtn");
       if (ib) ib.onclick = async () => {
         if (!deferredPrompt) return;

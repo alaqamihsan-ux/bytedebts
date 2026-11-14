@@ -303,7 +303,7 @@ const DEFAULT_COLOR = "#1257d6";
 const S = {
   db:null, userId:null, canWrite:true, readOnlyReason:"",
   customers:new Map(), txns:[], loadedC:false, loadedT:false, failed:"", stale:false,
-  me: lsGet("debtbook.me") || "", color: lsGet("debtbook.color") || DEFAULT_COLOR, mode: lsGet("debtbook.mode") || "auto", tpl: lsGet("debtbook.tpl") || "", modeTouched:false, filter:"all", q:"", txFilter:"all", txShow:150
+  me: lsGet("debtbook.me") || "", color: lsGet("debtbook.color") || DEFAULT_COLOR, mode: lsGet("debtbook.mode") || "auto", tpl: lsGet("debtbook.tpl") || "", zoom: +(lsGet("bd.zoom") || 1) || 1, notif: lsGet("bd.notif") !== "0", events: [], evSeen: +(lsGet("bd.evSeen") || 0), modeTouched:false, filter:"all", q:"", txFilter:"all", txShow:150
 };
 const OWE = x => x.IQD > 0.5 || x.USD > 0.005;
 const DAY = 864e5;
@@ -360,6 +360,41 @@ function applyMode(m){
   if (m === "light" || m === "dark") S.modeTouched = true;
 }
 
+/* ---------- zoom ---------- */
+function applyZoom(z){ z = Math.min(1.5, Math.max(0.7, Math.round(z*100)/100)); S.zoom = z; document.documentElement.style.zoom = z === 1 ? "" : String(z); return z; }
+
+/* ---------- activity events + notifications ---------- */
+const EV_TXT = {debt:"سجّل دين", pay:"استلم مبلغ", del:"حذف حركة", delc:"حذف الزبون"};
+function logEvent(kind, c, t){
+  if (!S.db) return;
+  const ev = {kind, customerId: c ? c.id : "", customerName: c ? c.name : "", amount: t ? (Number(t.amount)||0) : 0, currency: t ? (t.currency||"IQD") : "IQD", txType: t ? t.type : "", by: S.me || "", byId: S.userId || null, at: Date.now()};
+  S.db.collection("events").doc(genId()).set(ev).catch(() => {});
+}
+function evText(e){
+  const who = e.by || "موظف";
+  if (e.kind === "delc") return `${who} حذف الزبون «${e.customerName}»`;
+  const amt = e.amount ? fmt(e.amount, e.currency) : "";
+  if (e.kind === "del") return `${who} حذف ${e.txType==="pay"?"تسديد":"دين"} ${amt} من «${e.customerName}»`;
+  return `${who} ${EV_TXT[e.kind]||""} ${amt} ${e.kind==="pay"?"من":"على"} «${e.customerName}»`;
+}
+function notifyEvent(e){
+  if (!S.notif) return;
+  const body = evText(e);
+  toast(body);
+  try {
+    if ("Notification" in window && Notification.permission === "granted" && navigator.serviceWorker){
+      navigator.serviceWorker.ready.then(r => r.showNotification(e.kind==="debt" ? "دين جديد" : e.kind==="pay" ? "مبلغ مستلم" : "حذف من الدفتر",
+        {body, icon:"icon-192.png", badge:"icon-192.png", tag:"bd-" + (e.id||Date.now()), lang:"ar", dir:"rtl"})).catch(() => {});
+    }
+  } catch(err){}
+}
+async function askNotifPermission(){
+  if (!("Notification" in window)) return "unsupported";
+  if (Notification.permission === "granted") return "granted";
+  try { return await Notification.requestPermission(); } catch(e){ return "denied"; }
+}
+const unreadEvents = () => S.events.filter(e => (e.at||0) > S.evSeen && e.byId !== S.userId).length;
+
 /* ---------- routing ---------- */
 const TABS = [["","الرئيسية",I.home],["customers","الزبائن",I.users],["txns","الحركات",I.swap],["reports","التقارير",I.chart],["more","المزيد",I.dots]];
 function route(){ const h = location.hash.slice(1); if (h.startsWith("c-")) return {view:"cust", id:h.slice(2)};
@@ -371,7 +406,7 @@ window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); })
 
 /* ---------- chrome ---------- */
 function renderChrome(r, b){
-  const hasAlerts = S.loadedT && alerts(b).length > 0;
+  const nUnread = unreadEvents(); const hasAlerts = (S.loadedT && alerts(b).length > 0) || nUnread > 0;
   const left = `<div class="hdr-btns">
       <button class="hb" id="gearBtn" aria-label="الإعدادات">${I.gear}</button>
       <button class="hb" id="bellBtn" aria-label="التنبيهات">${I.bell}${hasAlerts?'<span class="dot"></span>':""}</button></div>`;
@@ -610,12 +645,13 @@ function viewCustomer(c, x){
   $("#delC").onclick = () => confirmSheet(`حذف «${c.name}» وكل حركاته (${txns.length})؟ ما يمكن التراجع.`, "احذف الزبون", async () => {
     for (const t of txns) await S.db.collection("txns").doc(t.id).delete();
     await S.db.collection("customers").doc(c.id).delete();
+    logEvent("delc", c, null);
     toast("انحذف الزبون"); pushed = false; location.hash = "customers";
   });
   $("#app").querySelectorAll("[data-del]").forEach(el => el.onclick = () => {
     const t = txns.find(z => z.id === el.dataset.del);
     confirmSheet(`حذف حركة ${t.type==="debt"?"الدين":"التسديد"} بمبلغ ${fmt(Number(t.amount)||0,t.currency)}؟`, "احذف الحركة", async () => {
-      await S.db.collection("txns").doc(t.id).delete(); toast("انحذفت الحركة");
+      await S.db.collection("txns").doc(t.id).delete(); logEvent("del", c, t); toast("انحذفت الحركة");
     });
   });
 }
@@ -687,6 +723,7 @@ function txnSheet(c, type){
       if (!LIC.canOp()){ close(); LIC.showBlocked(); return; }
       await S.db.collection("txns").doc(genId()).set({customerId:c.id, type, amount: cur==="USD" ? Math.round(a*100)/100 : Math.round(a), currency:cur,
         note: el.querySelector("#note").value.trim().slice(0,300), at: pickedTime(el.querySelector("#tdate").value), addedAt: Date.now(), by: S.me || "", byId: S.userId || null});
+        logEvent(type, c, {amount: cur==="USD" ? Math.round(a*100)/100 : Math.round(a), currency:cur, type});
         LIC.countOp(); close(); toast(type==="debt" ? "تسجّل الدين" : "تسجّل المبلغ المستلم");
     }, el.querySelector("#err"));
   });
@@ -771,11 +808,19 @@ function waSheet(c, x){
 
 function alertsSheet(b){
   const list = alerts(b);
+  const evs = S.events.slice(0, 30);
+  const seen = S.evSeen; S.evSeen = Date.now(); lsSet("bd.evSeen", String(S.evSeen)); renderSoon();
   sheet(`<h3>التنبيهات</h3>
+    <h4 style="margin:0;font-size:15px;font-weight:800">آخر العمليات</h4>
+    <div class="pick" style="max-height:38vh">${evs.length ? evs.map(e => `<div class="wa-item" ${e.customerId && S.customers.has(e.customerId) ? `data-ev="${esc(e.customerId)}" style="cursor:pointer"` : ""}>
+      <span class="tic" style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none;background:${e.kind==="pay"?"var(--green-bg)":"var(--red-bg)"};color:${e.kind==="pay"?"var(--green)":"var(--red)"}">${e.kind==="debt"?I.plus:e.kind==="pay"?I.minus:"✕"}</span>
+      <div class="who"><div style="font-size:14px;font-weight:700">${esc(evText(e))}</div><div class="dt">${e.at?dateFmt.format(e.at):""}${(e.at||0) > seen && e.byId !== S.userId ? ' · <b style="color:var(--red)">جديد</b>' : ""}</div></div></div>`).join("") : '<div class="empty">ماكو عمليات بعد.</div>'}</div>
+    <h4 style="margin:0;font-size:15px;font-weight:800">ديون متأخرة</h4>
     <div style="font-size:14px;color:var(--muted)">زبائن عليهم دين وما سددوا شي من أكثر من 30 يوم.</div>
     <div class="pick">${list.length ? list.map(({c,x,days}) => customerRow(c,x).replace('<span class="chev">', `<span style="font-size:12px;color:var(--red);font-weight:700;white-space:nowrap">${days} يوم</span><span class="chev">`)).join("") : '<div class="empty">ماكو تنبيهات. كل الزبائن سددوا خلال آخر 30 يوم.</div>'}</div>
     <button class="btn ghost" data-close>إغلاق</button>`,
-  (el, close) => { el.querySelector(".pick").addEventListener("click", e => { if (e.target.closest("[data-wa]")) close(); }, true); wireRows(el, id => { close(); openCustomer(id); }); });
+  (el, close) => { el.querySelectorAll(".pick").forEach(pk => pk.addEventListener("click", e => { if (e.target.closest("[data-wa]")) close(); }, true)); wireRows(el, id => { close(); openCustomer(id); });
+    el.querySelectorAll("[data-ev]").forEach(d => d.onclick = () => { close(); openCustomer(d.dataset.ev); }); });
 }
 
 function confirmSheet(text, yesLabel, fn){
@@ -813,6 +858,17 @@ function settingsSheet(){
     <div class="set-sec"><h4>رسالة تذكير الواتساب</h4>
       <textarea class="tpl" id="tpl" aria-label="نص رسالة التذكير">${esc(S.tpl || DEFAULT_TPL)}</textarea>
       <div class="hint">اكتب {الاسم} و {المبلغ} وتنستبدل تلقائياً لكل زبون.</div></div>
+    <div class="set-sec"><h4>حجم الصفحة</h4>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn" id="zOut" aria-label="تصغير" style="width:52px;font-size:22px;padding:6px">−</button>
+        <b id="zVal" class="num" style="flex:1;text-align:center;font-size:18px">${Math.round(S.zoom*100)}%</b>
+        <button class="btn" id="zIn" aria-label="تكبير" style="width:52px;font-size:22px;padding:6px">+</button>
+        <button class="btn ghost" id="zReset" style="padding:8px 12px">افتراضي</button></div>
+      <div class="hint">يتغير على هذا الموبايل فقط.</div></div>
+    <div class="set-sec"><h4>التنبيهات</h4>
+      <div class="seg" id="nSeg"><button data-n="1">مفعّلة</button><button data-n="0">مطفية</button></div>
+      <button class="btn" id="nPerm">${I.bell}السماح بإشعارات الموبايل</button>
+      <div class="hint" id="nHint">ينبهك من موبايل ثاني بالمحل يضيف دين أو يستلم مبلغ أو يحذف حركة أو زبون.</div></div>
     <div class="set-sec"><h4>تثبيت التطبيق</h4>
       <button class="btn" id="setInst">${I.plus}تثبيت على الشاشة الرئيسية (آيفون / أندرويد)</button>
       <div class="hint">${isStandalone() ? "الدفتر مثبّت على هذا الموبايل." : "يحط أيقونة الدفتر على شاشة الموبايل."}</div></div>
@@ -834,6 +890,20 @@ function settingsSheet(){
     cc.addEventListener("input", () => preview(cc.value));
     el.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { mode = b.dataset.m; applyMode(mode); paint(); });
     el.querySelector("#reset").onclick = () => preview(DEFAULT_COLOR);
+    const origZoom = S.zoom; let notifPick = S.notif;
+    const zv = el.querySelector("#zVal"), setZ = z => { zv.textContent = Math.round(applyZoom(z)*100) + "%"; };
+    el.querySelector("#zIn").onclick = () => setZ(S.zoom + 0.1);
+    el.querySelector("#zOut").onclick = () => setZ(S.zoom - 0.1);
+    el.querySelector("#zReset").onclick = () => setZ(1);
+    const paintN = () => { el.querySelectorAll("[data-n]").forEach(b => b.setAttribute("aria-pressed", (b.dataset.n === "1") === notifPick));
+      const p = "Notification" in window ? Notification.permission : "unsupported";
+      el.querySelector("#nPerm").hidden = !notifPick || p === "granted" || p === "unsupported";
+      el.querySelector("#nHint").textContent = !notifPick ? "التنبيهات مطفية على هذا الموبايل." : p === "granted" ? "الإشعارات مفعّلة: توصلك إشعارات والبرنامج مفتوح أو بالخلفية." : p === "denied" ? "الإشعارات ممنوعة من إعدادات المتصفح. فعّلها من إعدادات الموقع، والتنبيهات تبقى تطلع داخل البرنامج." : p === "unsupported" ? "هذا المتصفح ما يدعم الإشعارات، فالتنبيهات تطلع داخل البرنامج. بالآيفون لازم تفتح الدفتر من الأيقونة." : "ينبهك من موبايل ثاني يضيف دين أو يستلم مبلغ أو يحذف. اضغط الزر حتى توصلك إشعارات للموبايل."; };
+    el.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { notifPick = b.dataset.n === "1"; paintN(); });
+    el.querySelector("#nPerm").onclick = async () => { const r = await askNotifPermission(); if (r === "granted") toast("تفعّلت الإشعارات"); paintN(); };
+    paintN();
+    el.querySelector("#cancel").addEventListener("click", () => applyZoom(origZoom));
+    el.parentElement.addEventListener("click", e => { if (e.target === el.parentElement) applyZoom(origZoom); });
     el.querySelector("#setInst").onclick = () => { applyColor(orig); applyMode(S.mode); close(); gateInstall(true); };
     const revert = () => { applyColor(orig); applyMode(S.mode); close(); };
     el.querySelector("#cancel").onclick = revert;
@@ -844,6 +914,7 @@ function settingsSheet(){
       const v = el.querySelector("#mn").value.trim().slice(0,40);
       if (v){ S.me = v; lsSet("debtbook.me", v); }
       S.mode = mode; lsSet("debtbook.mode", mode);
+      lsSet("bd.zoom", String(S.zoom)); S.notif = notifPick; lsSet("bd.notif", notifPick ? "1" : "0");
       S.color = pick; lsSet("debtbook.color", pick);
       let tpl = el.querySelector("#tpl").value.trim().slice(0,600); if (tpl === DEFAULT_TPL) tpl = "";
       const tplChanged = tpl !== (S.tpl || "");
@@ -1077,7 +1148,7 @@ function gateShop(fs, uid, pre){
 /* ---------- data ---------- */
 let rs; function renderSoon(){ clearTimeout(rs); rs = setTimeout(() => { const a = document.activeElement; if (a && a.id === "q") return; render(); }, 30); }
 async function start(){
-  applyColor(S.color); applyMode(S.mode);
+  applyColor(S.color); applyMode(S.mode); applyZoom(S.zoom);
   render();
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   await LIC.init();
@@ -1094,7 +1165,7 @@ async function start(){
   const fs = firebase.firestore();
   try { await fs.enablePersistence({synchronizeTabs:true}); } catch(e){}
   let uid;
-  try { uid = (await firebase.auth().signInAnonymously()).user.uid; }
+  try { uid = (await firebase.auth().signInAnonymously()).user.uid; S.userId = uid; }
   catch(e){ S.failed = "ما كدرنا نتصل بالسيرفر. تأكد من الإنترنت وافتح الدفتر من جديد."; S.loadedC = S.loadedT = true; render(); return; }
 
   // 4) shop: saved, from a join link, or the create/join screen
@@ -1120,6 +1191,16 @@ async function start(){
   const onErr = e => { clearTimeout(timer); S.failed = e && e.code === "permission-denied" ? "ما عندك صلاحية على هذا الدفتر. انضم من جديد برابط الانضمام." : "انقطع الاتصال بالدفتر. سكّر البرنامج وافتحه من جديد."; S.loadedC = S.loadedT = true; render(); };
   db.collection("customers").onSnapshot(snap => { S.customers = new Map(snap.docs.map(d => [d.id, Object.assign({id:d.id}, d.data())])); S.loadedC = true; settle(); renderSoon(); }, onErr);
   db.collection("txns").onSnapshot(snap => { S.txns = snap.docs.map(d => Object.assign({id:d.id}, d.data())); S.loadedT = true; settle(); renderSoon(); }, onErr);
+  let evFirst = true; const startedAt = Date.now();
+  db.collection("events").orderBy("at", "desc").limit(60).onSnapshot(snap => {
+    S.events = snap.docs.map(d => Object.assign({id:d.id}, d.data()));
+    if (!evFirst) snap.docChanges().forEach(ch => {
+      if (ch.type !== "added") return; const e = Object.assign({id:ch.doc.id}, ch.doc.data());
+      if (e.byId && e.byId === S.userId) return; if ((e.at||0) < startedAt - 60000) return;
+      notifyEvent(e);
+    });
+    evFirst = false; renderSoon();
+  }, () => {});
   db.doc("settings/app").onSnapshot(snap => {
     if (snap.exists && typeof snap.data().tpl === "string"){ S.tpl = snap.data().tpl; lsSet("debtbook.tpl", S.tpl); }
     const c = snap.exists && snap.data().color;

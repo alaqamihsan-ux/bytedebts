@@ -559,7 +559,8 @@ function viewMore(){
       <button class="btn primary" id="setName">تغيير الاسم</button></section>
     <section class="card rep"><h3>الألوان والمظهر</h3><div style="font-size:14px">غيّر لون التطبيق أو اختار الوضع الفاتح أو الداكن.</div><button class="btn" id="openSet">فتح الإعدادات</button></section>
     <section class="card rep"><h3>تثبيت الدفتر كتطبيق</h3>
-      <div style="font-size:14px">افتح الدفتر من متصفح Chrome، اضغط زر القائمة (⋮) فوق، واختار «إضافة إلى الشاشة الرئيسية». سوّيها على كل موبايل من الأربعة.</div></section>
+      <div style="font-size:14px">${isStandalone() ? "الدفتر مثبّت على هذا الموبايل ويشتغل من الأيقونة." : "حط أيقونة الدفتر على الشاشة الرئيسية حتى ينفتح مثل التطبيق. سوّيها على كل موبايل بالمحل."}</div>
+      <button class="btn primary" id="instOpen">${I.plus}تثبيت على الشاشة الرئيسية (آيفون / أندرويد)</button></section>
     <section class="card rep"><h3>المحل</h3>
       <div class="kv"><span>اسم المحل</span><b>${esc(SHOP.name || "—")}</b></div>
       <div class="kv"><span>كود المحل</span><b class="num">${esc(SHOP.id)}</b></div>
@@ -578,6 +579,7 @@ function viewMore(){
   $("#setName").onclick = nameSheet;
   $("#openSet").onclick = settingsSheet;
   $("#openLic").onclick = () => LIC.showGate(true);
+  $("#instOpen").onclick = () => gateInstall(true);
   const jl = joinLink();
   $("#shareJoin").onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent("رابط الانضمام لدفتر ديون " + (SHOP.name||"المحل") + ":\n" + jl), "_blank");
   $("#copyJoin").onclick = () => { try { navigator.clipboard.writeText(jl).then(() => toast("انتسخ الرابط"), () => toast(jl)); } catch(e){ toast(jl); } };
@@ -811,6 +813,9 @@ function settingsSheet(){
     <div class="set-sec"><h4>رسالة تذكير الواتساب</h4>
       <textarea class="tpl" id="tpl" aria-label="نص رسالة التذكير">${esc(S.tpl || DEFAULT_TPL)}</textarea>
       <div class="hint">اكتب {الاسم} و {المبلغ} وتنستبدل تلقائياً لكل زبون.</div></div>
+    <div class="set-sec"><h4>تثبيت التطبيق</h4>
+      <button class="btn" id="setInst">${I.plus}تثبيت على الشاشة الرئيسية (آيفون / أندرويد)</button>
+      <div class="hint">${isStandalone() ? "الدفتر مثبّت على هذا الموبايل." : "يحط أيقونة الدفتر على شاشة الموبايل."}</div></div>
     <div class="set-sec"><h4>الوضع</h4>
       <div class="seg seg3" id="modes"><button data-m="auto">تلقائي</button><button data-m="light">فاتح</button><button data-m="dark">داكن</button></div>
       <div class="hint">هذا الخيار لهذا الموبايل فقط.</div></div>
@@ -829,6 +834,7 @@ function settingsSheet(){
     cc.addEventListener("input", () => preview(cc.value));
     el.querySelectorAll("[data-m]").forEach(b => b.onclick = () => { mode = b.dataset.m; applyMode(mode); paint(); });
     el.querySelector("#reset").onclick = () => preview(DEFAULT_COLOR);
+    el.querySelector("#setInst").onclick = () => { applyColor(orig); applyMode(S.mode); close(); gateInstall(true); };
     const revert = () => { applyColor(orig); applyMode(S.mode); close(); };
     el.querySelector("#cancel").onclick = revert;
     el.parentElement.addEventListener("click", e => { if (e.target === el.parentElement) { applyColor(orig); applyMode(S.mode); } });
@@ -936,33 +942,43 @@ const GFOOT = `<div class="foot">دفتر ديون بايت · تصميم وبر
 function gate(html){ const g = $("#gate"); g.hidden = false; g.innerHTML = `<div class="gate-in">${GLOGO}${html}${GFOOT}</div>`; g.scrollTop = 0; return g; }
 function closeGate(){ $("#gate").hidden = true; $("#gate").innerHTML = ""; }
 
-function gateInstall(){
+function gateInstall(fromSettings){
   return new Promise(done => {
     const finish = () => { closeGate(); done(); };
-    const ios = isIOS();
-    const g = gate(`<h2>ثبّت دفتر الديون على شاشة الموبايل</h2>
-      <p>حتى تصير عندك أيقونة على الشاشة الرئيسية وينفتح مثل التطبيق.</p>
-      <div class="gcard">${ios ? `
-        <h3>على الآيفون</h3>
-        <ol class="steps">
-          <li>افتح هذا الرابط من متصفح <b>Safari</b>.</li>
-          <li>اضغط زر <b>المشاركة</b> (المربع اللي بيه سهم لفوك) أسفل الشاشة.</li>
-          <li>اختار <b>«إضافة إلى الشاشة الرئيسية»</b> ثم <b>إضافة</b>.</li>
-          <li>سكّر Safari وافتح الدفتر من الأيقونة الجديدة.</li>
-        </ol>` : `
-        <h3>على الأندرويد</h3>
-        <button class="btn primary" id="instBtn" ${deferredPrompt ? "" : "disabled"}>${I.plus}تثبيت على الشاشة الرئيسية</button>
-        <div style="font-size:13px;color:var(--muted)" id="instHint">إذا الزر ما اشتغل: اضغط قائمة Chrome (⋮) فوك واختار «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»، وبعدها افتح الدفتر من الأيقونة.</div>`}
-      </div>
-      <button class="skip" id="skipInst">متابعة بدون تثبيت</button>`);
-    const ib = g.querySelector("#instBtn");
-    if (ib) ib.onclick = async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const r = await deferredPrompt.userChoice.catch(() => null); deferredPrompt = null; ib.disabled = true;
-      if (r && r.outcome === "accepted"){ lsSet("bd.installed", "1"); g.querySelector("#instHint").textContent = "انضافت الأيقونة على الشاشة. افتح الدفتر منها."; }
+    let plat = isIOS() ? "ios" : "android";
+    const draw = () => {
+      const installed = isStandalone();
+      const g = gate(`<h2>ثبّت دفتر الديون على شاشة الموبايل</h2>
+        <p>${installed ? "الدفتر مثبّت على هذا الموبايل ويشتغل من الأيقونة." : "حتى تصير عندك أيقونة على الشاشة الرئيسية وينفتح مثل التطبيق."}</p>
+        <div class="gcard">
+          <div class="tabs2"><button data-p="android" aria-pressed="${plat==="android"}">أندرويد</button><button data-p="ios" aria-pressed="${plat==="ios"}">آيفون</button></div>
+          ${plat === "ios" ? `
+          <ol class="steps">
+            <li>افتح رابط الدفتر من متصفح <b>Safari</b> (مو من Chrome أو الواتساب).</li>
+            <li>اضغط زر <b>المشاركة</b> (المربع اللي بيه سهم لفوك) أسفل الشاشة.</li>
+            <li>انزل واختار <b>«إضافة إلى الشاشة الرئيسية»</b> ثم <b>إضافة</b>.</li>
+            <li>سكّر Safari وافتح الدفتر من الأيقونة الجديدة.</li>
+          </ol>` : `
+          <button class="btn primary" id="instBtn" ${deferredPrompt ? "" : "disabled"}>${I.plus}تثبيت على الشاشة الرئيسية</button>
+          <ol class="steps" id="instHint">
+            <li>إذا الزر ما اشتغل: افتح الرابط من متصفح <b>Chrome</b>.</li>
+            <li>اضغط قائمة Chrome <b>(⋮)</b> فوك.</li>
+            <li>اختار <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.</li>
+            <li>افتح الدفتر من الأيقونة.</li>
+          </ol>`}
+        </div>
+        <button class="skip" id="skipInst">${fromSettings ? "رجوع" : "متابعة بدون تثبيت"}</button>`);
+      g.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { plat = b.dataset.p; draw(); });
+      const ib = g.querySelector("#instBtn");
+      if (ib) ib.onclick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const r = await deferredPrompt.userChoice.catch(() => null); deferredPrompt = null; ib.disabled = true;
+        if (r && r.outcome === "accepted"){ lsSet("bd.installed", "1"); ib.textContent = "انضافت الأيقونة على الشاشة ✓"; }
+      };
+      g.querySelector("#skipInst").onclick = () => { if (!fromSettings) lsSet("bd.instSkip", String(Date.now())); finish(); };
     };
-    g.querySelector("#skipInst").onclick = () => { lsSet("bd.instSkip", String(Date.now())); finish(); };
+    draw();
   });
 }
 

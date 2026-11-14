@@ -1060,7 +1060,20 @@ function iosGuide(mode){
       ${big(3, `اضغط <b>«إضافة»</b> فوك على اليمين.`)}
       ${big(4, `افتح <b>دفتر ديون</b> من الأيقونة الجديدة على الشاشة.`)}
     </ol>`;
-  return `<div style="font-size:13px;color:var(--muted)">اختار نوع جهازك إذا الخطوات ما تطابق اللي تشوفه:</div>${tabs}${steps}`;
+  const profile = (mode === "safari" || mode === "safari26") ? `
+    <div style="border:2px solid var(--green);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px">
+      <b style="font-size:17px;color:var(--green)">الطريقة الأولى: ملف التثبيت</b>
+      <a class="btn good" href="bytedebts.mobileconfig" style="font-size:17px">${I.plus}تنزيل ملف التثبيت</a>
+      <ol class="steps" style="list-style:none;padding:0;gap:12px">
+        ${big(1, `اضغط الزر الأخضر، وبعدين اضغط <b>«سماح»</b>.`)}
+        ${big(2, `افتح <b>الإعدادات</b> ⚙️ واضغط <b>«تم تنزيل ملف التعريف»</b> اللي يطلع فوك.`)}
+        ${big(3, `اضغط <b>«تثبيت»</b> واكتب رمز قفل الموبايل، وبعدين <b>«تثبيت»</b> مرة ثانية.`)}
+        ${big(4, `ارجع للشاشة الرئيسية وافتح <b>دفتر ديون</b> من الأيقونة.`)}
+      </ol>
+      <small style="color:var(--muted)">إذا كتب «غير موثّق» عادي، الملف من بايت ويضيف أيقونة الدفتر بس.</small>
+    </div>
+    <b style="font-size:16px">الطريقة الثانية: من Safari</b>` : "";
+  return `<div style="font-size:13px;color:var(--muted)">اختار نوع جهازك إذا الخطوات ما تطابق اللي تشوفه:</div>${tabs}${profile}${steps}`;
 }
 function showIosArrow(mode){
   let a = document.getElementById("iosArrow");
